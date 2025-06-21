@@ -1,6 +1,7 @@
 package net.tjkraft.aegislands;
 
 import com.mojang.logging.LogUtils;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -16,6 +17,8 @@ import net.tjkraft.aegislands.block.ALBlocks;
 import net.tjkraft.aegislands.block.blockEntity.ALBlockEntity;
 import net.tjkraft.aegislands.config.ALServerConfig;
 import net.tjkraft.aegislands.item.ALItems;
+import net.tjkraft.aegislands.menu.ALMenuTypes;
+import net.tjkraft.aegislands.menu.custom.AegisAnchorScreen;
 import org.slf4j.Logger;
 
 @Mod(AegisLands.MOD_ID)
@@ -29,6 +32,7 @@ public class AegisLands {
         ALItems.ITEMS.register(modEventBus);
         ALBlocks.BLOCKS.register(modEventBus);
         ALBlockEntity.BLOCK_ENTITIES.register(modEventBus);
+        ALMenuTypes.MENUS.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
@@ -47,6 +51,9 @@ public class AegisLands {
     @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
         @SubscribeEvent
-        public static void onClientSetup(FMLClientSetupEvent event) {}
+        public static void onClientSetup(FMLClientSetupEvent event) {
+            MenuScreens.register(ALMenuTypes.AEGIS_ANCHOR_MENU.get(), AegisAnchorScreen::new);
+
+        }
     }
 }
