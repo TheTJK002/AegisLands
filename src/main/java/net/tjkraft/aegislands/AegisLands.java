@@ -52,7 +52,7 @@ public class AegisLands {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-            MenuScreens.register(ALGUI.AEGIS_ANCHOR_MENU.get(), AegisAnchorScreen::new);
+            MenuScreens.register(ALGUI.CLAIM_BLOCK_MENU.get(), AegisAnchorScreen::new);
         }
     }
 }

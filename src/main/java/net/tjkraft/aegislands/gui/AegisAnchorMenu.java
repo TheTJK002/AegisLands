@@ -13,90 +13,36 @@ import net.tjkraft.aegislands.block.ALBlocks;
 import net.tjkraft.aegislands.block.custom.AegisAnchorBlockEntity;
 
 public class AegisAnchorMenu extends AbstractContainerMenu {
-    public final AegisAnchorBlockEntity blockEntity;
-    private final Level level;
-    private final ContainerData data;
+    private final AegisAnchorBlockEntity blockEntity;
 
-    public AegisAnchorMenu(int pContainerId, Inventory inv, FriendlyByteBuf extraData) {
-        this(pContainerId, inv, inv.player.level().getBlockEntity(extraData.readBlockPos()), new SimpleContainerData(0));
-    }
+    public AegisAnchorMenu(int id, Inventory playerInventory, AegisAnchorBlockEntity blockEntity) {
+        super(ALGUI.CLAIM_BLOCK_MENU.get(), id);
+        this.blockEntity = blockEntity;
 
-    public AegisAnchorMenu(int pContainerId, Inventory inv, BlockEntity entity, ContainerData data) {
-        super(ALGUI.AEGIS_ANCHOR_MENU.get(), pContainerId);
-        checkContainerSize(inv, 1);
-        blockEntity = ((AegisAnchorBlockEntity) entity);
-        this.level = inv.player.level();
-        this.data = data;
+        this.addSlot(new SlotItemHandler(blockEntity.getInventory(), 0, 80, 35));
 
-        addPlayerInventory(inv);
-        addPlayerHotbar(inv);
-
-        this.blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(iItemHandler -> {
-            this.addSlot(new SlotItemHandler(iItemHandler, 0, 53, 42));
-        });
-
-        addDataSlots(data);
-    }
-
-    private static final int HOTBAR_SLOT_COUNT = 9;
-    private static final int PLAYER_INVENTORY_ROW_COUNT = 3;
-    private static final int PLAYER_INVENTORY_COLUMN_COUNT = 9;
-    private static final int PLAYER_INVENTORY_SLOT_COUNT = PLAYER_INVENTORY_COLUMN_COUNT * PLAYER_INVENTORY_ROW_COUNT;
-    private static final int VANILLA_SLOT_COUNT = HOTBAR_SLOT_COUNT + PLAYER_INVENTORY_SLOT_COUNT;
-    private static final int VANILLA_FIRST_SLOT_INDEX = 0;
-    private static final int TE_INVENTORY_FIRST_SLOT_INDEX = VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT;
-
-    private static final int TE_INVENTORY_SLOT_COUNT = 1;
-    @Override
-    public ItemStack quickMoveStack(Player playerIn, int pIndex) {
-        Slot sourceSlot = slots.get(pIndex);
-        if (sourceSlot == null || !sourceSlot.hasItem()) return ItemStack.EMPTY;  //EMPTY_ITEM
-        ItemStack sourceStack = sourceSlot.getItem();
-        ItemStack copyOfSourceStack = sourceStack.copy();
-
-        if (pIndex < VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT) {
-            if (!moveItemStackTo(sourceStack, TE_INVENTORY_FIRST_SLOT_INDEX, TE_INVENTORY_FIRST_SLOT_INDEX
-                    + TE_INVENTORY_SLOT_COUNT, false)) {
-                return ItemStack.EMPTY;
+        for (int row = 0; row < 3; ++row) {
+            for (int col = 0; col < 9; ++col) {
+                this.addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18));
             }
-        } else if (pIndex < TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT) {
-            if (!moveItemStackTo(sourceStack, VANILLA_FIRST_SLOT_INDEX, VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT, false)) {
-                return ItemStack.EMPTY;
-            }
-        } else {
-            System.out.println("Invalid slotIndex:" + pIndex);
-            return ItemStack.EMPTY;
         }
-        if (sourceStack.getCount() == 0) {
-            sourceSlot.set(ItemStack.EMPTY);
-        } else {
-            sourceSlot.setChanged();
+
+        for (int col = 0; col < 9; ++col) {
+            this.addSlot(new Slot(playerInventory, col, 8 + col * 18, 142));
         }
-        sourceSlot.onTake(playerIn, sourceStack);
-        return copyOfSourceStack;
     }
 
     @Override
-    public boolean stillValid(Player pPlayer) {
-        return stillValid(ContainerLevelAccess.create(level, blockEntity.getBlockPos()),
-                pPlayer, ALBlocks.AEGIS_ANCHOR.get());
+    public ItemStack quickMoveStack(Player pPlayer, int pIndex) {
+        return null;
+    }
+
+    @Override
+    public boolean stillValid(Player player) {
+        return true;
     }
 
     public AegisAnchorBlockEntity getBlockEntity() {
         return blockEntity;
-    }
-
-    private void addPlayerInventory(Inventory playerInventory) {
-        for (int i = 0; i < 3; ++i) {
-            for (int l = 0; l < 9; ++l) {
-                this.addSlot(new Slot(playerInventory, l + i * 9 + 9, 8 + l * 18, 100 + i * 18));
-            }
-        }
-    }
-
-    private void addPlayerHotbar(Inventory playerInventory) {
-        for (int i = 0; i < 9; ++i) {
-            this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 158));
-        }
     }
 }

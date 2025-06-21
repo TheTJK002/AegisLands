@@ -2,6 +2,7 @@ package net.tjkraft.aegislands.event;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -17,47 +18,37 @@ public class ForgeEvents {
     @SubscribeEvent
     public static void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
-        if (!isAllowed(player, event.getPos())) {
-            event.setCanceled(true);
-        }
+        if (!isAllowed(player, event.getPos())) event.setCanceled(true);
     }
 
     @SubscribeEvent
     public static void onBlockBreak(BlockEvent.BreakEvent event) {
-        Player player = event.getPlayer();
-        if (!isAllowed(player, event.getPos())) {
-            event.setCanceled(true);
-        }
+        if (!isAllowed(event.getPlayer(), event.getPos())) event.setCanceled(true);
     }
 
     @SubscribeEvent
     public static void onRightClick(PlayerInteractEvent.RightClickBlock event) {
-        Player player = event.getEntity();
-        if (!isAllowed(player, event.getPos())) {
-            event.setCanceled(true);
-        }
+        if (!isAllowed(event.getEntity(), event.getPos())) event.setCanceled(true);
     }
 
-    public static boolean isAllowed(Player player, BlockPos pos) {
+    private static boolean isAllowed(Player player, BlockPos pos) {
         Level level = player.level();
-        for (BlockPos nearby : BlockPos.betweenClosed(
-                pos.offset(-8, -8, -8), pos.offset(8, 8, 8))) {
-            BlockEntity be = level.getBlockEntity(nearby);
-            if (be instanceof AegisAnchorBlockEntity claimBlock) {
-                if (claimBlock.getOwner() != null && !claimBlock.getOwner().equals(player.getUUID())) {
-                    BlockPos center = claimBlock.getBlockPos();
-                    if (withinClaimedArea(center, pos)) {
-                        return false;
-                    }
+
+        ChunkPos chunk = new ChunkPos(pos);
+        BlockPos start = chunk.getBlockAt(0, 0, 0);
+        BlockPos end = chunk.getBlockAt(15, level.getMaxBuildHeight(), 15);
+
+        for (BlockPos check : BlockPos.betweenClosed(start, end)) {
+            BlockEntity be = level.getBlockEntity(check);
+            if (be instanceof AegisAnchorBlockEntity claim) {
+                if (claim.isInsideActiveClaim(pos) && !player.getUUID().equals(claim.getOwner())) {
+                    return false;
                 }
             }
         }
+
         return true;
     }
 
-    private static boolean withinClaimedArea(BlockPos center, BlockPos target) {
-        return Math.abs(center.getX() - target.getX()) <= 8 &&
-                Math.abs(center.getZ() - target.getZ()) <= 8 &&
-                Math.abs(center.getY() - target.getY()) <= 8;
-    }
+
 }
