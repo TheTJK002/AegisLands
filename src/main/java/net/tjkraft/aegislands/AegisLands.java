@@ -1,7 +1,6 @@
 package net.tjkraft.aegislands;
 
 import com.mojang.logging.LogUtils;
-import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -13,11 +12,9 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.tjkraft.aegislands.block.ALBlockEntities;
 import net.tjkraft.aegislands.block.ALBlocks;
+import net.tjkraft.aegislands.block.blockEntity.ALBlockEntity;
 import net.tjkraft.aegislands.config.ALServerConfig;
-import net.tjkraft.aegislands.gui.ALGUI;
-import net.tjkraft.aegislands.gui.AegisAnchorScreen;
 import net.tjkraft.aegislands.item.ALItems;
 import org.slf4j.Logger;
 
@@ -31,8 +28,7 @@ public class AegisLands {
 
         ALItems.ITEMS.register(modEventBus);
         ALBlocks.BLOCKS.register(modEventBus);
-        ALBlockEntities.BLOCK_ENTITY.register(modEventBus);
-        ALGUI.GUI.register(modEventBus);
+        ALBlockEntity.BLOCK_ENTITIES.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
@@ -51,8 +47,6 @@ public class AegisLands {
     @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
         @SubscribeEvent
-        public static void onClientSetup(FMLClientSetupEvent event) {
-            MenuScreens.register(ALGUI.CLAIM_BLOCK_MENU.get(), AegisAnchorScreen::new);
-        }
+        public static void onClientSetup(FMLClientSetupEvent event) {}
     }
 }
