@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "claim_anchor:block/claim_anchor"
+    }
+  }
+}
