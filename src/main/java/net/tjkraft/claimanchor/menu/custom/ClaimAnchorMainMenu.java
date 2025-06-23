@@ -11,15 +11,15 @@ import net.minecraftforge.items.SlotItemHandler;
 import net.tjkraft.claimanchor.block.blockEntity.custom.ClaimAnchorBlockEntity;
 import net.tjkraft.claimanchor.menu.CAMenuTypes;
 
-public class ClaimAnchorMenu extends AbstractContainerMenu {
+public class ClaimAnchorMainMenu extends AbstractContainerMenu {
     public final ClaimAnchorBlockEntity blockEntity;
     private final ContainerLevelAccess access;
 
-    public ClaimAnchorMenu(int id, Inventory inv, FriendlyByteBuf buf) {
+    public ClaimAnchorMainMenu(int id, Inventory inv, FriendlyByteBuf buf) {
         this(id, inv, inv.player.level().getBlockEntity(buf.readBlockPos()));
     }
 
-    public ClaimAnchorMenu(int id, Inventory inv, BlockEntity entity) {
+    public ClaimAnchorMainMenu(int id, Inventory inv, BlockEntity entity) {
         super(CAMenuTypes.CLAIM_ANCHOR_MENU.get(), id);
         this.blockEntity = (ClaimAnchorBlockEntity) entity;
         this.access = ContainerLevelAccess.create(entity.getLevel(), entity.getBlockPos());

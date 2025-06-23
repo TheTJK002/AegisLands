@@ -155,7 +155,7 @@ public class ForgeEvents {
                     BlockPos pos = new BlockPos(x, y, z);
                     BlockEntity be = level.getBlockEntity(pos);
                     if (be instanceof ClaimAnchorBlockEntity anchor && anchor.claimIsActive()) {
-                        if (!player.getUUID().equals(anchor.getOwner()) && !player.getUUID().equals(anchor.getTrustedPlayers())) {
+                        if (!anchor.hasAccess(player.getUUID())) {
                             return true;
                         }
                     }

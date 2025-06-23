@@ -2,6 +2,7 @@ package net.tjkraft.claimanchor.block.custom;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -17,6 +18,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -25,8 +27,11 @@ import net.tjkraft.claimanchor.block.blockEntity.CABlockEntity;
 import net.tjkraft.claimanchor.block.blockEntity.custom.AnchorTracker;
 import net.tjkraft.claimanchor.block.blockEntity.custom.ClaimAnchorBlockEntity;
 import net.tjkraft.claimanchor.config.CAServerConfig;
+import net.tjkraft.claimanchor.network.ClaimAnchorNetwork;
+import net.tjkraft.claimanchor.network.claimAnchorTime.ClaimAnchorTime;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class ClaimAnchorBlock extends BaseEntityBlock {
@@ -63,6 +68,7 @@ public class ClaimAnchorBlock extends BaseEntityBlock {
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         if (!level.isClientSide && placer instanceof Player player) {
+
             UUID uuid = player.getUUID();
             int count = AnchorTracker.getAnchors(uuid);
             int limit = CAServerConfig.MAX_ANCHOR_PER_PLAYER.get();
@@ -73,10 +79,38 @@ public class ClaimAnchorBlock extends BaseEntityBlock {
                 return;
             }
 
+            int minChunkDistance = CAServerConfig.MIN_CLAIM_CHUNK_DISTANCE.get();
+            int chunkX = pos.getX() >> 4;
+            int chunkZ = pos.getZ() >> 4;
+
+            if (level instanceof ServerLevel serverLevel) {
+                for (int dx = -minChunkDistance; dx <= minChunkDistance; dx++) {
+                    for (int dz = -minChunkDistance; dz <= minChunkDistance; dz++) {
+                        int cx = chunkX + dx;
+                        int cz = chunkZ + dz;
+
+                        LevelChunk chunk = serverLevel.getChunk(cx, cz);
+                        for (BlockEntity be : chunk.getBlockEntities().values()) {
+                            if (be instanceof ClaimAnchorBlockEntity anchor) {
+                                UUID owner = anchor.getOwner();
+                                if (owner != null && !owner.equals(uuid)) {
+                                    player.sendSystemMessage(Component.literal(
+                                            "❌ Troppo vicino al claim di un altro giocatore (" + minChunkDistance + " chunk)."
+                                    ));
+                                    level.destroyBlock(pos, true);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof ClaimAnchorBlockEntity claimAnchor) {
                 claimAnchor.setOwner(uuid);
                 AnchorTracker.increment(uuid);
+                ClaimAnchorNetwork.INSTANCE.sendToServer(new ClaimAnchorTime(uuid, pos));
             }
         }
     }

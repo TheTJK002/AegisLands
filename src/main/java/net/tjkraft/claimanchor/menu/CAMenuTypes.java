@@ -8,12 +8,12 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.tjkraft.claimanchor.ClaimAnchor;
-import net.tjkraft.claimanchor.menu.custom.ClaimAnchorMenu;
+import net.tjkraft.claimanchor.menu.custom.ClaimAnchorMainMenu;
 
 public class CAMenuTypes {
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, ClaimAnchor.MOD_ID);
 
-    public static final RegistryObject<MenuType<ClaimAnchorMenu>> CLAIM_ANCHOR_MENU = registerMenuType("claim_anchor_menu", ClaimAnchorMenu::new);
+    public static final RegistryObject<MenuType<ClaimAnchorMainMenu>> CLAIM_ANCHOR_MENU = registerMenuType("claim_anchor_menu", ClaimAnchorMainMenu::new);
 
     private static <T extends AbstractContainerMenu> RegistryObject<MenuType<T>> registerMenuType(String name, IContainerFactory<T> factory) {
         return MENUS.register(name, () -> IForgeMenuType.create(factory));

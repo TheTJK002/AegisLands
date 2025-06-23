@@ -1,4 +1,4 @@
-package net.tjkraft.claimanchor.network;
+package net.tjkraft.claimanchor.network.claimAnchorTrusted;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;

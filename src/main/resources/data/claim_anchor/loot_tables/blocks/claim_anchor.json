@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "claim_anchor:claim_anchor"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "claim_anchor:blocks/claim_anchor"
+}

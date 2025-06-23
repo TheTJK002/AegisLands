@@ -4,15 +4,18 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -21,7 +24,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.tjkraft.claimanchor.block.blockEntity.CABlockEntity;
 import net.tjkraft.claimanchor.config.CAServerConfig;
-import net.tjkraft.claimanchor.menu.custom.ClaimAnchorMenu;
+import net.tjkraft.claimanchor.menu.custom.ClaimAnchorMainMenu;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -85,9 +88,12 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
                 this.claimTime--;
                 if (owner == this.getOwner()) {
                     this.takeClaimTime(this.getClaimTime());
+                    setChanged();
                 }
                 setChanged();
             }
+
+            synchronizeClaimTimers(this.getClaimTime());
         }
     }
 
@@ -102,6 +108,7 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
     }
 
     public int getClaimTime() {
+        setChanged();
         return claimTime;
     }
 
@@ -124,10 +131,6 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
 
     private final Set<UUID> trustedPlayers = new HashSet<>();
 
-    public Set<UUID> getTrustedPlayers() {
-        return trustedPlayers;
-    }
-
     public void addTrusted(UUID uuid) {
         trustedPlayers.add(uuid);
         setChanged();
@@ -138,9 +141,32 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
         setChanged();
     }
 
-    public boolean isTrusted(UUID uuid) {
-        return trustedPlayers.contains(uuid);
+    public boolean hasAccess(UUID uuid) {
+        return uuid.equals(owner) || trustedPlayers.contains(uuid);
     }
+
+    private void synchronizeClaimTimers(int newTimer) {
+        if (level == null || level.isClientSide) return;
+        if (owner == null) return;
+
+        ChunkPos center = new ChunkPos(this.getBlockPos());
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                ChunkPos chunkPos = new ChunkPos(center.x + dx, center.z + dz);
+                LevelChunk chunk = ((ServerLevel) level).getChunk(chunkPos.x, chunkPos.z);
+                for (BlockEntity be : chunk.getBlockEntities().values()) {
+                    if (be instanceof ClaimAnchorBlockEntity other
+                            && owner.equals(other.getOwner())
+                            && other != this) {
+                        other.claimTime = newTimer;
+                        other.setChanged();
+                    }
+                }
+            }
+        }
+    }
+
+
 
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
@@ -196,6 +222,12 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
 
     @Override
     public @Nullable AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-        return new ClaimAnchorMenu(pContainerId, pPlayerInventory, this);
+        return new ClaimAnchorMainMenu(pContainerId, pPlayerInventory, this);
+    }
+
+    public void setTimerTicks(int ticks) {
+        this.claimTime = ticks;
+        setChanged();
+        synchronizeClaimTimers(ticks);
     }
 }

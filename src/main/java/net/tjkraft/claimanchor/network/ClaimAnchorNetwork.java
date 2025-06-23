@@ -5,6 +5,9 @@ import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 import net.tjkraft.claimanchor.ClaimAnchor;
+import net.tjkraft.claimanchor.network.claimAnchorTime.ClaimAnchorTime;
+import net.tjkraft.claimanchor.network.claimAnchorTrusted.AddTrustedPacket;
+import net.tjkraft.claimanchor.network.claimAnchorTrusted.RemoveTrustedPacket;
 
 public class ClaimAnchorNetwork {
     public static SimpleChannel INSTANCE;
@@ -34,6 +37,12 @@ public class ClaimAnchorNetwork {
                 .decoder(RemoveTrustedPacket::decode)
                 .encoder(RemoveTrustedPacket::encode)
                 .consumerMainThread(RemoveTrustedPacket::handle)
+                .add();
+
+        net.messageBuilder(ClaimAnchorTime.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(ClaimAnchorTime::decode)
+                .encoder(ClaimAnchorTime::encode)
+                .consumerMainThread(ClaimAnchorTime::handle)
                 .add();
     }
 }

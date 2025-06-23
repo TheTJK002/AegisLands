@@ -1,4 +1,4 @@
-package net.tjkraft.claimanchor.network;
+package net.tjkraft.claimanchor.network.claimAnchorTrusted;
 
 import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;

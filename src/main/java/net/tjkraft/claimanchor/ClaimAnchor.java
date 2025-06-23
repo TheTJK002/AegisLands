@@ -18,7 +18,7 @@ import net.tjkraft.claimanchor.block.blockEntity.CABlockEntity;
 import net.tjkraft.claimanchor.config.CAServerConfig;
 import net.tjkraft.claimanchor.item.CAItems;
 import net.tjkraft.claimanchor.menu.CAMenuTypes;
-import net.tjkraft.claimanchor.menu.custom.ClaimAnchorScreen;
+import net.tjkraft.claimanchor.menu.custom.ClaimAnchorMainScreen;
 import net.tjkraft.claimanchor.network.ClaimAnchorNetwork;
 import org.slf4j.Logger;
 
@@ -54,7 +54,7 @@ public class ClaimAnchor {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-            MenuScreens.register(CAMenuTypes.CLAIM_ANCHOR_MENU.get(), ClaimAnchorScreen::new);
+            MenuScreens.register(CAMenuTypes.CLAIM_ANCHOR_MENU.get(), ClaimAnchorMainScreen::new);
 
         }
     }
