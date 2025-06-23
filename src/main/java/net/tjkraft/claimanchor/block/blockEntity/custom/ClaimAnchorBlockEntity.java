@@ -1,10 +1,14 @@
 package net.tjkraft.claimanchor.block.blockEntity.custom;
 
+import com.mojang.authlib.GameProfile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -97,14 +101,14 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
         }
     }
 
-    public void setOwner(UUID owner) {
-        this.owner = owner;
-        setChanged();
-    }
-
     public UUID getOwner() {
         setChanged();
         return owner;
+    }
+
+    public void setOwner(UUID owner) {
+        this.owner = owner;
+        setChanged();
     }
 
     public int getClaimTime() {
@@ -124,6 +128,7 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
 
     public boolean claimIsActive() {
         if (claimTime > 0) {
+            setChanged();
             return true;
         }
         return false;
@@ -155,9 +160,7 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
                 ChunkPos chunkPos = new ChunkPos(center.x + dx, center.z + dz);
                 LevelChunk chunk = ((ServerLevel) level).getChunk(chunkPos.x, chunkPos.z);
                 for (BlockEntity be : chunk.getBlockEntities().values()) {
-                    if (be instanceof ClaimAnchorBlockEntity other
-                            && owner.equals(other.getOwner())
-                            && other != this) {
+                    if (be instanceof ClaimAnchorBlockEntity other && owner.equals(other.getOwner()) && other != this) {
                         other.claimTime = newTimer;
                         other.setChanged();
                     }
@@ -167,6 +170,11 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
     }
 
 
+    public void setTimerTicks(int ticks) {
+        this.claimTime = ticks;
+        setChanged();
+        synchronizeClaimTimers(ticks);
+    }
 
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
@@ -225,9 +233,16 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
         return new ClaimAnchorMainMenu(pContainerId, pPlayerInventory, this);
     }
 
-    public void setTimerTicks(int ticks) {
-        this.claimTime = ticks;
-        setChanged();
-        synchronizeClaimTimers(ticks);
+    @Nullable
+    @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag() {
+        CompoundTag nbt = super.getUpdateTag();
+        saveAdditional(nbt);
+        return nbt;
     }
 }

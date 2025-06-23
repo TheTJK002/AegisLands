@@ -30,7 +30,7 @@ public class ClaimMonocle extends Item {
                     BlockPos check = new BlockPos((chunkX << 4) + x, y, (chunkZ << 4) + z);
                     if (level.getBlockEntity(check) instanceof ClaimAnchorBlockEntity anchor) {
                         String timeStr = formatTicksAsTime(anchor.getClaimTime());
-                        player.sendSystemMessage(Component.literal(timeStr));
+                        player.displayClientMessage(Component.literal(timeStr), true);
 
                         if (level instanceof ServerLevel serverLevel) {
                             showClaimBox(serverLevel, anchor.getBlockPos());
@@ -86,8 +86,7 @@ public class ClaimMonocle extends Item {
         long minutes = totalSeconds / 60;
         long seconds = totalSeconds % 60;
 
-        return String.format("📅 Tempo claim: %d anni, %d mesi, %d giorni, %d ore, %d minuti, %d secondi",
-                years, months, days, hours, minutes, seconds);
+        return String.format("📅 Tempo claim: %d anni, %d mesi, %d giorni, %d ore, %d minuti, %d secondi", years, months, days, hours, minutes, seconds);
     }
 
 }

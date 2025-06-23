@@ -16,6 +16,7 @@ public class ClaimAnchorMainScreen extends AbstractContainerScreen<ClaimAnchorMa
     private final ClaimAnchorBlockEntity anchor;
     private final Inventory inventory;
 
+
     private static final ResourceLocation TEXTURE = new ResourceLocation(ClaimAnchor.MOD_ID, "textures/gui/claim_anchor_gui.png");
 
     public ClaimAnchorMainScreen(ClaimAnchorMainMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
@@ -32,7 +33,7 @@ public class ClaimAnchorMainScreen extends AbstractContainerScreen<ClaimAnchorMa
     protected void init() {
         super.init();
         addRenderableWidget(Button.builder(Component.literal("Gestisci Player"), b -> {
-            Minecraft.getInstance().setScreen(new ClaimAnchorTrustedScreen(this.menu, this.inventory, this.title));
+            Minecraft.getInstance().setScreen(new ClaimAnchorTrustedScreen(anchor));
         }).pos(leftPos + 30, topPos + 40).size(120, 20).build());
     }
 
@@ -49,6 +50,24 @@ public class ClaimAnchorMainScreen extends AbstractContainerScreen<ClaimAnchorMa
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
+        String timeStr = formatTicks(menu.data.get(0));
+        graphics.drawString(font, timeStr, leftPos + 10, topPos + 24, 0xFFFFFF);
         renderTooltip(graphics, mouseX, mouseY);
     }
+
+    String formatTicks(int ticks) {
+        int seconds = ticks / 20;
+        int minutes = seconds / 60;
+        int hours = minutes / 60;
+        int days = hours / 24;
+        int years = days / 365;
+
+        days %= 365;
+        hours %= 24;
+        minutes %= 60;
+        seconds %= 60;
+
+        return String.format("%02dy : %02dd : %02dh : %02dm : %02ds", years, days, hours, minutes, seconds);
+    }
+
 }

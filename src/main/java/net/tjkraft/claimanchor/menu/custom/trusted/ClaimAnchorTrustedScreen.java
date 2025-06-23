@@ -4,15 +4,13 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Inventory;
 import net.tjkraft.claimanchor.ClaimAnchor;
 import net.tjkraft.claimanchor.block.blockEntity.custom.ClaimAnchorBlockEntity;
-import net.tjkraft.claimanchor.menu.custom.main.ClaimAnchorMainMenu;
 import net.tjkraft.claimanchor.network.ClaimAnchorNetwork;
 import net.tjkraft.claimanchor.network.claimAnchorTrusted.AddTrustedPacket;
 import net.tjkraft.claimanchor.network.claimAnchorTrusted.RemoveTrustedPacket;
@@ -22,25 +20,23 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class ClaimAnchorTrustedScreen extends AbstractContainerScreen<ClaimAnchorMainMenu> {
+public class ClaimAnchorTrustedScreen extends Screen {
     private final List<UUID> onlinePlayers;
     private final Map<UUID, String> uuidToName;
     private final ClaimAnchorBlockEntity anchor;
+    private final int imageWidth = 176;
+    private final int imageHeight = 179;
+    private int leftPos, topPos;
 
     private static final ResourceLocation TEXTURE = new ResourceLocation(ClaimAnchor.MOD_ID, "textures/gui/claim_anchor_list_player_gui.png");
 
-    public ClaimAnchorTrustedScreen(ClaimAnchorMainMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
-        super(pMenu, pPlayerInventory, Component.literal("Player List"));
-        this.imageWidth = 176;
-        this.imageHeight = 179;
-        this.titleLabelX = imageWidth / 3;
-        this.inventoryLabelY = 10000;
-
-        this.anchor = pMenu.blockEntity;
-        UUID ownerUUID = anchor.getOwner();
+    public ClaimAnchorTrustedScreen(ClaimAnchorBlockEntity anchor) {
+        super(Component.empty());
+        this.anchor = anchor;
+        UUID ownerUUID = this.anchor.getOwner();
         this.onlinePlayers = Minecraft.getInstance().getConnection().getOnlinePlayers().stream()
                 .map(info -> info.getProfile().getId())
-                .filter(uuid -> !uuid.equals(ownerUUID))
+                .filter(uuid -> ownerUUID == null || !uuid.equals(ownerUUID))
                 .collect(Collectors.toList());
 
         this.uuidToName = Minecraft.getInstance().getConnection().getOnlinePlayers().stream()
@@ -50,32 +46,31 @@ public class ClaimAnchorTrustedScreen extends AbstractContainerScreen<ClaimAncho
                 ));
     }
 
-    private int scrollOffset = 0;
-    private static final int ENTRY_HEIGHT = 20;
-    private static final int VISIBLE = 7;
-
     @Override
     protected void init() {
+        this.leftPos = (this.width - imageWidth) / 2;
+        this.topPos = (this.height - imageHeight) / 2;
+
         clearWidgets();
-        super.init();
         addRenderableWidget(Button.builder(Component.literal("▲"), b -> {
-            scrollOffset = Math.max(0, scrollOffset - 1);
             init();
+            scrollOffset = Math.max(0, scrollOffset - 1);
         }).pos(leftPos + 176, topPos + 76).size(12, 12).build());
 
         addRenderableWidget(Button.builder(Component.literal("▼"), b -> {
-            scrollOffset = Math.min(Math.max(0, onlinePlayers.size() - VISIBLE), scrollOffset + 1);
             init();
+            scrollOffset = Math.min(Math.max(0, onlinePlayers.size() - VISIBLE), scrollOffset + 1);
         }).pos(leftPos + 176, topPos + 91).size(12, 12).build());
 
         int y = 30;
         for (int i = scrollOffset; i < Math.min(scrollOffset + VISIBLE, onlinePlayers.size()); i++) {
             UUID uuid = onlinePlayers.get(i);
-
             Button add = Button.builder(Component.literal("+"), b -> {
+                init();
                 sendAdd(uuid);
             }).pos(leftPos + 120, topPos + y).size(16, 16).build();
             Button rem = Button.builder(Component.literal("-"), b -> {
+                init();
                 sendRemove(uuid);
             }).pos(leftPos + 145, topPos + y).size(16, 16).build();
 
@@ -87,18 +82,26 @@ public class ClaimAnchorTrustedScreen extends AbstractContainerScreen<ClaimAncho
     }
 
     @Override
-    protected void renderBg(GuiGraphics pGuiGraphics, float pPartialTick, int pMouseX, int pMouseY) {
+    public void renderBackground(GuiGraphics pGuiGraphics) {
+        super.renderBackground(pGuiGraphics);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderSystem.setShaderTexture(0, TEXTURE);
-        int x = (width - imageWidth) / 2;
-        int y = (height - imageHeight) / 2;
+        int x = (this.width - imageWidth) / 2;
+        int y = (this.height - imageHeight) / 2;
         pGuiGraphics.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
     }
+
+    private int scrollOffset = 0;
+    private static final int ENTRY_HEIGHT = 20;
+
+    private static final int VISIBLE = 7;
 
     @Override
     public void render(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
         renderBackground(pGuiGraphics);
         super.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+        this.leftPos = (this.width - imageWidth) / 2;
+        this.topPos = (this.height - imageHeight) / 2;
         int y = topPos + 30;
         for (int i = scrollOffset; i < Math.min(scrollOffset + VISIBLE, onlinePlayers.size()); i++) {
             UUID uuid = onlinePlayers.get(i);
@@ -128,4 +131,5 @@ public class ClaimAnchorTrustedScreen extends AbstractContainerScreen<ClaimAncho
     private void sendRemove(UUID uuid) {
         ClaimAnchorNetwork.INSTANCE.sendToServer(new RemoveTrustedPacket(anchor.getBlockPos(), uuid));
     }
+
 }
