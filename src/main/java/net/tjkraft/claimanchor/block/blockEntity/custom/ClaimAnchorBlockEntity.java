@@ -24,7 +24,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.tjkraft.claimanchor.block.blockEntity.CABlockEntity;
 import net.tjkraft.claimanchor.config.CAServerConfig;
-import net.tjkraft.claimanchor.menu.custom.ClaimAnchorMainMenu;
+import net.tjkraft.claimanchor.menu.custom.main.ClaimAnchorMainMenu;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

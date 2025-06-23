@@ -1,4 +1,4 @@
-package net.tjkraft.claimanchor.menu.custom;
+package net.tjkraft.claimanchor.menu.custom.main;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;

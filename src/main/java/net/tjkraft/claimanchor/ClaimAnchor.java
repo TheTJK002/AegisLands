@@ -18,7 +18,7 @@ import net.tjkraft.claimanchor.block.blockEntity.CABlockEntity;
 import net.tjkraft.claimanchor.config.CAServerConfig;
 import net.tjkraft.claimanchor.item.CAItems;
 import net.tjkraft.claimanchor.menu.CAMenuTypes;
-import net.tjkraft.claimanchor.menu.custom.ClaimAnchorMainScreen;
+import net.tjkraft.claimanchor.menu.custom.main.ClaimAnchorMainScreen;
 import net.tjkraft.claimanchor.network.ClaimAnchorNetwork;
 import org.slf4j.Logger;
 

@@ -1,4 +1,4 @@
-package net.tjkraft.claimanchor.menu.custom;
+package net.tjkraft.claimanchor.menu.custom.trusted;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
@@ -12,6 +12,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.tjkraft.claimanchor.ClaimAnchor;
 import net.tjkraft.claimanchor.block.blockEntity.custom.ClaimAnchorBlockEntity;
+import net.tjkraft.claimanchor.menu.custom.main.ClaimAnchorMainMenu;
 import net.tjkraft.claimanchor.network.ClaimAnchorNetwork;
 import net.tjkraft.claimanchor.network.claimAnchorTrusted.AddTrustedPacket;
 import net.tjkraft.claimanchor.network.claimAnchorTrusted.RemoveTrustedPacket;
@@ -21,23 +22,17 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class ClaimAnchorMainScreen extends AbstractContainerScreen<ClaimAnchorMainMenu> {
+public class ClaimAnchorTrustedScreen extends AbstractContainerScreen<ClaimAnchorMainMenu> {
     private final List<UUID> onlinePlayers;
     private final Map<UUID, String> uuidToName;
     private final ClaimAnchorBlockEntity anchor;
-    private int listStartY = 20;
+    private int listStartY = -18;
 
+    private static final ResourceLocation TEXTURE = new ResourceLocation(ClaimAnchor.MOD_ID, "textures/gui/claim_anchor_list_player_gui.png");
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(ClaimAnchor.MOD_ID, "textures/gui/claim_anchor_gui.png");
-
-    public ClaimAnchorMainScreen(ClaimAnchorMainMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
-        super(pMenu, pPlayerInventory, pTitle);
+    public ClaimAnchorTrustedScreen(ClaimAnchorMainMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
+        super(pMenu, pPlayerInventory, Component.literal("Player List"));
         this.anchor = pMenu.blockEntity;
-        this.imageWidth = 176;
-        this.imageHeight = 182;
-        this.inventoryLabelX = 8;
-        this.inventoryLabelY = 88;
-
         UUID ownerUUID = anchor.getOwner();
         this.onlinePlayers = Minecraft.getInstance().getConnection().getOnlinePlayers().stream()
                 .map(info -> info.getProfile().getId())
@@ -54,6 +49,10 @@ public class ClaimAnchorMainScreen extends AbstractContainerScreen<ClaimAnchorMa
     @Override
     protected void init() {
         super.init();
+        this.imageWidth = 176;
+        this.imageHeight = 256;
+        this.titleLabelX = (width - imageWidth) / 2;
+
         int y = listStartY;
         for (UUID uuid : onlinePlayers) {
 
@@ -67,7 +66,7 @@ public class ClaimAnchorMainScreen extends AbstractContainerScreen<ClaimAnchorMa
 
             addRenderableWidget(btnAdd);
             addRenderableWidget(btnRemove);
-            y += 24;
+            y += 16;
         }
     }
 
@@ -89,10 +88,9 @@ public class ClaimAnchorMainScreen extends AbstractContainerScreen<ClaimAnchorMa
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics);
-        super.render(graphics, mouseX, mouseY, partialTick);
-        int y = 20;
+    public void render(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
+        renderBackground(pGuiGraphics);
+        super.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
         for (UUID uuid : onlinePlayers) {
             PlayerInfo info = Minecraft.getInstance().getConnection().getOnlinePlayers().stream()
                     .filter(i -> i.getProfile().getId().equals(uuid))
@@ -105,12 +103,12 @@ public class ClaimAnchorMainScreen extends AbstractContainerScreen<ClaimAnchorMa
             ResourceLocation skin = info.getSkinLocation();
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
             RenderSystem.setShaderTexture(0, skin);
-            graphics.blit(skin, leftPos + 10, topPos + y + 6, 8, 8, 8, 8, 64, 64);
-            graphics.blit(skin, leftPos + 10, topPos + y + 6, 40, 8, 8, 8, 64, 64);
-            graphics.drawString(font, name, leftPos + 24, topPos + y + 6, 0xFFFFFF);
-
-            y += 24;
+            pGuiGraphics.blit(skin, leftPos + 10, topPos - 12, 8, 8, 8, 8, 64, 64);
+            pGuiGraphics.blit(skin, leftPos + 10, topPos - 12, 40, 8, 8, 8, 64, 64);
+            pGuiGraphics.drawString(font, name, leftPos + 24, topPos - 12, 0xFFFFFF);
         }
-        renderTooltip(graphics, mouseX, mouseY);
     }
+
+    @Override
+    protected void renderLabels(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY) {}
 }

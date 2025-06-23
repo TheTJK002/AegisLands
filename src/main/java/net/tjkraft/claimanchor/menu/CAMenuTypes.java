@@ -8,7 +8,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.tjkraft.claimanchor.ClaimAnchor;
-import net.tjkraft.claimanchor.menu.custom.ClaimAnchorMainMenu;
+import net.tjkraft.claimanchor.menu.custom.main.ClaimAnchorMainMenu;
 
 public class CAMenuTypes {
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, ClaimAnchor.MOD_ID);
