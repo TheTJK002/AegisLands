@@ -3,6 +3,7 @@ package net.tjkraft.claimanchor.block.blockEntity.custom;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -33,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -83,7 +85,7 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
                 String itemId = ForgeRegistries.ITEMS.getKey(stack.getItem()).toString();
                 if (CAServerConfig.PAYMENT_CLAIM.get().contains(itemId)) {
                     stack.shrink(1);
-                    this.extendTime(CAServerConfig.CLAIM_DURATION_MINUTES.get());
+                    this.extendTime(CAServerConfig.CLAIM_TIME.get());
                     this.setChanged();
                 }
             }
@@ -96,8 +98,15 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
                 }
                 setChanged();
             }
-
             synchronizeClaimTimers(this.getClaimTime());
+
+            if (this.claimIsActive()) {
+                ServerLevel serverLevel = (ServerLevel) level;
+                double x = pos.getX() + 0.5 + (level.random.nextDouble() - 0.5);
+                double y = pos.getY() + 0.5 + (level.random.nextDouble() - 0.5);
+                double z = pos.getZ() + 0.5 + (level.random.nextDouble() - 0.5);
+                serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER, x, y, z, 1, 0, 0, 0, 0);
+            }
         }
     }
 
@@ -110,6 +119,21 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
         this.owner = owner;
         setChanged();
     }
+
+    @Nullable
+    public String getOwnerName() {
+        if (owner == null || level == null || level.isClientSide) return null;
+
+        MinecraftServer server = ((ServerLevel) level).getServer();
+        ServerPlayer player = server.getPlayerList().getPlayer(owner);
+        if (player != null) {
+            return player.getName().getString();
+        }
+
+        Optional<GameProfile> profile = server.getProfileCache().get(owner);
+        return profile.map(GameProfile::getName).orElse("Unknown");
+    }
+
 
     public int getClaimTime() {
         setChanged();
@@ -169,7 +193,6 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
         }
     }
 
-
     public void setTimerTicks(int ticks) {
         this.claimTime = ticks;
         setChanged();
@@ -219,18 +242,18 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
         for (Tag t : list) {
             trustedPlayers.add(NbtUtils.loadUUID((IntArrayTag) t));
         }
-        itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        itemHandler.deserializeNBT(tag.getCompound("Inventory"));
         claimTime = tag.getInt("Claim Time");
     }
 
     @Override
     public Component getDisplayName() {
-        return Component.literal("");
+        return Component.translatable("block.claim_anchor.claim_anchor");
     }
 
     @Override
     public @Nullable AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-        return new ClaimAnchorMainMenu(pContainerId, pPlayerInventory, this);
+        return new ClaimAnchorMainMenu(pContainerId, pPlayerInventory, this, this.getOwnerName());
     }
 
     @Nullable

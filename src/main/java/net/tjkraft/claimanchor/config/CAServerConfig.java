@@ -9,10 +9,10 @@ public class CAServerConfig {
 
     public static final ForgeConfigSpec.IntValue MIN_ANCHOR_Y;
     public static final ForgeConfigSpec.IntValue MAX_ANCHOR_Y;
-    public static final ForgeConfigSpec.IntValue MAX_ANCHOR_PER_PLAYER;
+    public static final ForgeConfigSpec.IntValue LIMIT_CLAIM_ANCHOR_PER_PLAYER;
     public static final ForgeConfigSpec.IntValue MIN_CLAIM_CHUNK_DISTANCE;
-    public static final ForgeConfigSpec.IntValue CLAIM_DURATION_MINUTES;
-    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> PAYMENT_CLAIM;
+    public static final ForgeConfigSpec.IntValue CLAIM_TIME;
+    public static final ForgeConfigSpec.ConfigValue<String> PAYMENT_CLAIM;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> CLAIM_ALLOWED_BLOCKS;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> CLAIM_ALLOWED_ENTITIES;
 
@@ -21,40 +21,39 @@ public class CAServerConfig {
 
         builder.push("Claim Anchor Settings");
         MIN_ANCHOR_Y = builder
-                .comment("Scegli la profondità del Claim Anchor")
+                .comment("Choose the depth of the Claim Anchor")
                 .defineInRange("min_anchor_y", 16, 1, 64);
 
         MAX_ANCHOR_Y = builder
-                .comment("Scegli l'altezza del Claim Anchor")
+                .comment("Choose the height of the Claim Anchor")
                 .defineInRange("max_anchor_y", 16, 1, 64);
 
-        MAX_ANCHOR_PER_PLAYER = builder
-                .comment("Claim Anchor per player")
-                .defineInRange("max_claim_anchor_per_player", 3, 1, Integer.MAX_VALUE);
+        LIMIT_CLAIM_ANCHOR_PER_PLAYER = builder
+                .comment("Limit of Claim Anchor that the player can place")
+                .defineInRange("limit_claim_anchor_per_player", 3, 1, Integer.MAX_VALUE);
 
         MIN_CLAIM_CHUNK_DISTANCE = builder
-                .comment("Distanza minima (in chunk)")
+                .comment("Distance between claims between different owners (in chunks)")
                 .defineInRange("min_claim_chunk_distance", 3, 1, 64);
 
         PAYMENT_CLAIM = builder
-                .comment("Oggetti che possono essere inseriti per estendere la durata del claim")
-                .defineListAllowEmpty("claim_anchor_fuel_items",
-                        List.of("minecraft:clock"),
-                        o -> o instanceof String);
+                .comment("Choose which object should be used to add time to the claim")
+                .define("payment_claim", "minecraft:clock");
 
-        CLAIM_DURATION_MINUTES = builder
-                .comment("Durata in minuti del claim prima che scada (senza ricarica)")
-                .defineInRange("claim_anchor_duration_minutes", 300, 1, Integer.MAX_VALUE);
+        CLAIM_TIME = builder
+                .comment("Choose the time of payment for the item (1 = 20 tick)")
+                .comment("300 = 5 minutes")
+                .defineInRange("claim_time", 300, 1, Integer.MAX_VALUE);
 
 
         CLAIM_ALLOWED_BLOCKS = builder
-                .comment("Blocchi che si può interagire dentro al chunk")
+                .comment("Blocks that can be interacted with in the claim")
                 .defineListAllowEmpty("claim_anchor_allowed_blocks",
                         List.of("minecraft:crafting_table"),
                         o -> o instanceof String);
 
         CLAIM_ALLOWED_ENTITIES = builder
-                .comment("Entità che si possono interagire dentro al chunk")
+                .comment("Entities that can be interacted with in the claim")
                 .defineListAllowEmpty("claim_anchor_allowed_entities",
                         List.of("minecraft:boats"),
                         o -> o instanceof String);

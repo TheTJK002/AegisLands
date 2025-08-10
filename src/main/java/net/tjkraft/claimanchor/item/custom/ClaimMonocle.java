@@ -20,6 +20,10 @@ public class ClaimMonocle extends Item {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        if (level.isClientSide) {
+            return InteractionResultHolder.success(player.getItemInHand(hand));
+        }
+
         BlockPos playerPos = player.blockPosition();
         int chunkX = playerPos.getX() >> 4;
         int chunkZ = playerPos.getZ() >> 4;
@@ -86,7 +90,7 @@ public class ClaimMonocle extends Item {
         long minutes = totalSeconds / 60;
         long seconds = totalSeconds % 60;
 
-        return String.format("📅 Tempo claim: %d anni, %d mesi, %d giorni, %d ore, %d minuti, %d secondi", years, months, days, hours, minutes, seconds);
+        return String.format("📅 Claim Time: %d years, %d months, %d days, %d hours, %d minutes, %d seconds", years, months, days, hours, minutes, seconds);
     }
 
 }

@@ -2,7 +2,6 @@ package net.tjkraft.claimanchor.event;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
@@ -31,7 +30,6 @@ public class ForgeEvents {
     public static void onBlockBreak(BlockEvent.BreakEvent event) {
         if (shouldBlock(event.getPlayer(), event.getPos(), (Level) event.getLevel())) {
             event.setCanceled(true);
-            event.getPlayer().sendSystemMessage(Component.literal("Questa zona è protetta!"));
         }
     }
 
@@ -40,7 +38,6 @@ public class ForgeEvents {
         if (event.getEntity() instanceof Player player) {
             if (shouldBlock(player, event.getPos(), (Level) event.getLevel())) {
                 event.setCanceled(true);
-                player.sendSystemMessage(Component.literal("Questa zona è protetta!"));
             }
         }
     }
@@ -66,7 +63,6 @@ public class ForgeEvents {
 
         if (shouldBlock(player, mutableBlockPos, level)) {
             event.setCanceled(true);
-            player.sendSystemMessage(Component.literal("⛔ Non puoi usare questo blocco in un claim."));
         }
     }
 
@@ -81,7 +77,6 @@ public class ForgeEvents {
 
         if (shouldBlock(player, target.blockPosition(), level)) {
             event.setCanceled(true);
-            player.sendSystemMessage(Component.literal("⛔ Non puoi usare questo blocco in un claim."));
         }
     }
 
@@ -95,7 +90,6 @@ public class ForgeEvents {
         if (event.getSource().getEntity() instanceof Player player) {
             if (shouldBlock(player, target.blockPosition(), target.level())) {
                 event.setCanceled(true);
-                player.sendSystemMessage(Component.literal("⛔ Non puoi danneggiare questa entità in un claim."));
             }
         }
     }
@@ -113,7 +107,6 @@ public class ForgeEvents {
         if (event.getEntity() instanceof Player player) {
             if (shouldBlock(player, mount.blockPosition(), mount.level())) {
                 event.setCanceled(true);
-                player.sendSystemMessage(Component.literal("⛔ Non puoi cavalcare questa entità in un claim."));
             }
         }
     }
@@ -154,7 +147,7 @@ public class ForgeEvents {
                 for (int y = minY; y <= maxY; y++) {
                     BlockPos pos = new BlockPos(x, y, z);
                     BlockEntity be = level.getBlockEntity(pos);
-                    if (be instanceof ClaimAnchorBlockEntity anchor && anchor.claimIsActive()) {
+                    if (be instanceof ClaimAnchorBlockEntity anchor) {
                         if (!anchor.hasAccess(player.getUUID())) {
                             return true;
                         }

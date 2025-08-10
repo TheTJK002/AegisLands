@@ -1,4 +1,10 @@
 {
   "block.claim_anchor.claim_anchor": "Claim Anchor",
-  "item.claim_anchor.claim_monocle": "Claim Monocle"
+  "item.claim_anchor.claim_monocle": "Claim Monocle",
+
+  "msg.claim_anchor.reach_limited": "You have reached your Claim Anchor limit: %s",
+  "msg.claim_anchor.close_claim": "You are too close to another player's claim: %s chunks",
+  "msg.claim_anchor.owner_break": "Only the owner can break this",
+  "gui.claim_anchor.add_remove_player": "Add/Remove Player",
+  "gui.claim_anchor.owner": "Owner: %s"
 }

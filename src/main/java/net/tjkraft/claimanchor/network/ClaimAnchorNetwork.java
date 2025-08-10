@@ -8,6 +8,7 @@ import net.tjkraft.claimanchor.ClaimAnchor;
 import net.tjkraft.claimanchor.network.claimAnchorTime.ClaimAnchorTime;
 import net.tjkraft.claimanchor.network.claimAnchorTrusted.AddTrustedPacket;
 import net.tjkraft.claimanchor.network.claimAnchorTrusted.RemoveTrustedPacket;
+import net.tjkraft.claimanchor.network.syncOnlinePlayers.SyncOnlinePlayersPacket;
 
 public class ClaimAnchorNetwork {
     public static SimpleChannel INSTANCE;
@@ -43,6 +44,12 @@ public class ClaimAnchorNetwork {
                 .decoder(ClaimAnchorTime::decode)
                 .encoder(ClaimAnchorTime::encode)
                 .consumerMainThread(ClaimAnchorTime::handle)
+                .add();
+
+        net.messageBuilder(SyncOnlinePlayersPacket.class, id())
+                .decoder(SyncOnlinePlayersPacket::decode)
+                .encoder(SyncOnlinePlayersPacket::encode)
+                .consumerMainThread(SyncOnlinePlayersPacket::handle)
                 .add();
     }
 }

@@ -15,70 +15,34 @@ import net.tjkraft.claimanchor.network.ClaimAnchorNetwork;
 import net.tjkraft.claimanchor.network.claimAnchorTrusted.AddTrustedPacket;
 import net.tjkraft.claimanchor.network.claimAnchorTrusted.RemoveTrustedPacket;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class ClaimAnchorTrustedScreen extends Screen {
-    private final List<UUID> onlinePlayers;
-    private final Map<UUID, String> uuidToName;
     private final ClaimAnchorBlockEntity anchor;
     private final int imageWidth = 176;
     private final int imageHeight = 179;
     private int leftPos, topPos;
+    private int scrollOffset = 0;
+    private static final int ENTRY_HEIGHT = 20;
+    private static final int VISIBLE = 7;
+    private int tickCounter = 0;
 
     private static final ResourceLocation TEXTURE = new ResourceLocation(ClaimAnchor.MOD_ID, "textures/gui/claim_anchor_list_player_gui.png");
+
+    private final List<UUID> onlinePlayers = new ArrayList<>();
+    private final Map<UUID, String> uuidToName = new HashMap<>();
 
     public ClaimAnchorTrustedScreen(ClaimAnchorBlockEntity anchor) {
         super(Component.empty());
         this.anchor = anchor;
-        UUID ownerUUID = this.anchor.getOwner();
-        this.onlinePlayers = Minecraft.getInstance().getConnection().getOnlinePlayers().stream()
-                .map(info -> info.getProfile().getId())
-                .filter(uuid -> ownerUUID == null || !uuid.equals(ownerUUID))
-                .collect(Collectors.toList());
-
-        this.uuidToName = Minecraft.getInstance().getConnection().getOnlinePlayers().stream()
-                .collect(Collectors.toMap(
-                        info -> info.getProfile().getId(),
-                        info -> info.getProfile().getName()
-                ));
+        syncFromConnection();
     }
 
     @Override
     protected void init() {
         this.leftPos = (this.width - imageWidth) / 2;
         this.topPos = (this.height - imageHeight) / 2;
-
-        clearWidgets();
-        addRenderableWidget(Button.builder(Component.literal("▲"), b -> {
-            init();
-            scrollOffset = Math.max(0, scrollOffset - 1);
-        }).pos(leftPos + 176, topPos + 76).size(12, 12).build());
-
-        addRenderableWidget(Button.builder(Component.literal("▼"), b -> {
-            init();
-            scrollOffset = Math.min(Math.max(0, onlinePlayers.size() - VISIBLE), scrollOffset + 1);
-        }).pos(leftPos + 176, topPos + 91).size(12, 12).build());
-
-        int y = 30;
-        for (int i = scrollOffset; i < Math.min(scrollOffset + VISIBLE, onlinePlayers.size()); i++) {
-            UUID uuid = onlinePlayers.get(i);
-            Button add = Button.builder(Component.literal("+"), b -> {
-                init();
-                sendAdd(uuid);
-            }).pos(leftPos + 120, topPos + y).size(16, 16).build();
-            Button rem = Button.builder(Component.literal("-"), b -> {
-                init();
-                sendRemove(uuid);
-            }).pos(leftPos + 145, topPos + y).size(16, 16).build();
-
-            addRenderableWidget(add);
-            addRenderableWidget(rem);
-
-            y += ENTRY_HEIGHT;
-        }
+        refreshVisiblePlayers();
     }
 
     @Override
@@ -91,25 +55,15 @@ public class ClaimAnchorTrustedScreen extends Screen {
         pGuiGraphics.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
     }
 
-    private int scrollOffset = 0;
-    private static final int ENTRY_HEIGHT = 20;
-
-    private static final int VISIBLE = 7;
-
     @Override
     public void render(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
         renderBackground(pGuiGraphics);
         super.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
-        this.leftPos = (this.width - imageWidth) / 2;
-        this.topPos = (this.height - imageHeight) / 2;
         int y = topPos + 30;
         for (int i = scrollOffset; i < Math.min(scrollOffset + VISIBLE, onlinePlayers.size()); i++) {
             UUID uuid = onlinePlayers.get(i);
             String name = uuidToName.getOrDefault(uuid, "???");
-            PlayerInfo info = Minecraft.getInstance().getConnection()
-                    .getOnlinePlayers().stream()
-                    .filter(pi -> pi.getProfile().getId().equals(uuid))
-                    .findFirst().orElse(null);
+            PlayerInfo info = Minecraft.getInstance().getConnection().getOnlinePlayers().stream().filter(pi -> pi.getProfile().getId().equals(uuid)).findFirst().orElse(null);
 
             if (info != null) {
                 ResourceLocation skin = info.getSkinLocation();
@@ -124,6 +78,30 @@ public class ClaimAnchorTrustedScreen extends Screen {
         }
     }
 
+    private void syncFromConnection() {
+        UUID ownerUUID = this.anchor.getOwner();
+        this.onlinePlayers.clear();
+        this.uuidToName.clear();
+
+        for (PlayerInfo info : Minecraft.getInstance().getConnection().getOnlinePlayers()) {
+            UUID uuid = info.getProfile().getId();
+            if (ownerUUID == null || !uuid.equals(ownerUUID)) {
+                this.onlinePlayers.add(uuid);
+                this.uuidToName.put(uuid, info.getProfile().getName());
+            }
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        tickCounter++;
+        if (tickCounter >= 300) {
+            tickCounter = 0;
+            updateOnlinePlayers(Minecraft.getInstance().getConnection().getOnlinePlayers().stream().map(info -> info.getProfile().getId()).toList());
+        }
+    }
+
     private void sendAdd(UUID uuid) {
         ClaimAnchorNetwork.INSTANCE.sendToServer(new AddTrustedPacket(anchor.getBlockPos(), uuid));
     }
@@ -132,4 +110,47 @@ public class ClaimAnchorTrustedScreen extends Screen {
         ClaimAnchorNetwork.INSTANCE.sendToServer(new RemoveTrustedPacket(anchor.getBlockPos(), uuid));
     }
 
+    public void updateOnlinePlayers(List<UUID> newOnline) {
+        UUID ownerUUID = this.anchor.getOwner();
+        this.onlinePlayers.clear();
+        for (UUID id : newOnline) {
+            if (ownerUUID == null || !id.equals(ownerUUID)) {
+                this.onlinePlayers.add(id);
+            }
+        }
+
+        this.uuidToName.clear();
+        for (PlayerInfo info : Minecraft.getInstance().getConnection().getOnlinePlayers()) {
+            this.uuidToName.put(info.getProfile().getId(), info.getProfile().getName());
+        }
+
+        this.scrollOffset = 0;
+        refreshVisiblePlayers();
+    }
+
+    private void refreshVisiblePlayers() {
+        clearWidgets();
+
+        addRenderableWidget(Button.builder(Component.literal("▲"), b -> {
+            scrollOffset = Math.max(0, scrollOffset - 1);
+            refreshVisiblePlayers();
+        }).pos(leftPos + 176, topPos + 76).size(12, 12).build());
+
+        addRenderableWidget(Button.builder(Component.literal("▼"), b -> {
+            scrollOffset = Math.min(Math.max(0, onlinePlayers.size() - VISIBLE), scrollOffset + 1);
+            refreshVisiblePlayers();
+        }).pos(leftPos + 176, topPos + 91).size(12, 12).build());
+
+        int y = 30;
+        for (int i = scrollOffset; i < Math.min(scrollOffset + VISIBLE, onlinePlayers.size()); i++) {
+            UUID uuid = onlinePlayers.get(i);
+            Button add = Button.builder(Component.literal("+"), b -> sendAdd(uuid)).pos(leftPos + 120, topPos + y).size(16, 16).build();
+            Button rem = Button.builder(Component.literal("-"), b -> sendRemove(uuid)).pos(leftPos + 145, topPos + y).size(16, 16).build();
+
+            addRenderableWidget(add);
+            addRenderableWidget(rem);
+
+            y += ENTRY_HEIGHT;
+        }
+    }
 }

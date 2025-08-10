@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -19,6 +20,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -27,11 +29,11 @@ import net.tjkraft.claimanchor.block.blockEntity.CABlockEntity;
 import net.tjkraft.claimanchor.block.blockEntity.custom.AnchorTracker;
 import net.tjkraft.claimanchor.block.blockEntity.custom.ClaimAnchorBlockEntity;
 import net.tjkraft.claimanchor.config.CAServerConfig;
+import net.tjkraft.claimanchor.menu.custom.main.ClaimAnchorMainMenu;
 import net.tjkraft.claimanchor.network.ClaimAnchorNetwork;
 import net.tjkraft.claimanchor.network.claimAnchorTime.ClaimAnchorTime;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.UUID;
 
 public class ClaimAnchorBlock extends BaseEntityBlock {
@@ -55,8 +57,14 @@ public class ClaimAnchorBlock extends BaseEntityBlock {
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
         if (!pLevel.isClientSide()) {
             BlockEntity entity = pLevel.getBlockEntity(pPos);
-            if (entity instanceof ClaimAnchorBlockEntity) {
-                NetworkHooks.openScreen((ServerPlayer) pPlayer, (ClaimAnchorBlockEntity) entity, pPos);
+            if (entity instanceof ClaimAnchorBlockEntity claimAnchorBlock) {
+                UUID owner = claimAnchorBlock.getOwner();
+                if (owner != null && pPlayer.getUUID().equals(owner)) {
+                    NetworkHooks.openScreen((ServerPlayer) pPlayer, new SimpleMenuProvider((id, inv, p) -> new ClaimAnchorMainMenu(id, inv, claimAnchorBlock, claimAnchorBlock.getOwnerName()), Component.literal("Claim Anchor")), buf -> {
+                        buf.writeBlockPos(pPos);
+                        buf.writeUtf(claimAnchorBlock.getOwnerName() != null ? claimAnchorBlock.getOwnerName() : "Unknown");
+                    });
+                }
             } else {
                 throw new IllegalStateException("Our Container provider is missing!");
             }
@@ -71,10 +79,10 @@ public class ClaimAnchorBlock extends BaseEntityBlock {
 
             UUID uuid = player.getUUID();
             int count = AnchorTracker.getAnchors(uuid);
-            int limit = CAServerConfig.MAX_ANCHOR_PER_PLAYER.get();
+            int limit = CAServerConfig.LIMIT_CLAIM_ANCHOR_PER_PLAYER.get();
 
             if (count >= limit) {
-                player.sendSystemMessage(Component.literal("Hai raggiunto il limite di Anchor: " + limit));
+                player.displayClientMessage(Component.translatable("msg.claim_anchor.reach_limited", limit), true);
                 level.destroyBlock(pos, true);
                 return;
             }
@@ -94,9 +102,7 @@ public class ClaimAnchorBlock extends BaseEntityBlock {
                             if (be instanceof ClaimAnchorBlockEntity anchor) {
                                 UUID owner = anchor.getOwner();
                                 if (owner != null && !owner.equals(uuid)) {
-                                    player.sendSystemMessage(Component.literal(
-                                            "❌ Troppo vicino al claim di un altro giocatore (" + minChunkDistance + " chunk)."
-                                    ));
+                                    player.displayClientMessage(Component.translatable("msg.claim_anchor.close_claim", minChunkDistance), true);
                                     level.destroyBlock(pos, true);
                                     return;
                                 }
@@ -114,6 +120,22 @@ public class ClaimAnchorBlock extends BaseEntityBlock {
             }
         }
     }
+
+    @Override
+    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
+        if (!level.isClientSide) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof ClaimAnchorBlockEntity anchor) {
+                UUID owner = anchor.getOwner();
+                if (owner != null && !owner.equals(player.getUUID())) {
+                    player.displayClientMessage(Component.translatable("msg.claim_anchor.owner_break"), true);
+                    return false;
+                }
+            }
+        }
+        return super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
+    }
+
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {

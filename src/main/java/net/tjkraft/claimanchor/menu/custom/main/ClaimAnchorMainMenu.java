@@ -13,25 +13,28 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.SlotItemHandler;
 import net.tjkraft.claimanchor.block.blockEntity.custom.ClaimAnchorBlockEntity;
 import net.tjkraft.claimanchor.menu.CAMenuTypes;
+import org.jetbrains.annotations.Nullable;
 
 public class ClaimAnchorMainMenu extends AbstractContainerMenu {
     public final ClaimAnchorBlockEntity blockEntity;
     private final ContainerLevelAccess access;
     public final ContainerData data;
+    public final String ownerName;
 
     public ClaimAnchorMainMenu(int id, Inventory inv, FriendlyByteBuf buf) {
-        this(id, inv, inv.player.level().getBlockEntity(buf.readBlockPos()));
+        this(id, inv, inv.player.level().getBlockEntity(buf.readBlockPos()), buf.readUtf());
     }
 
-    public ClaimAnchorMainMenu(int id, Inventory inv, BlockEntity entity) {
+    public ClaimAnchorMainMenu(int id, Inventory inv, BlockEntity entity, @Nullable String ownerName) {
         super(CAMenuTypes.CLAIM_ANCHOR_MENU.get(), id);
         this.blockEntity = (ClaimAnchorBlockEntity) entity;
         this.access = ContainerLevelAccess.create(entity.getLevel(), entity.getBlockPos());
         this.data = this.blockEntity.data;
+        this.ownerName = ownerName;
         this.addDataSlots(this.data);
 
         this.blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(iItemHandler -> {
-            this.addSlot(new SlotItemHandler(iItemHandler, 0, 80, 42));
+            this.addSlot(new SlotItemHandler(iItemHandler, 0, 80, 56));
         });
 
         for (int row = 0; row < 3; row++) {
@@ -69,11 +72,6 @@ public class ClaimAnchorMainMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player pPlayer) {
-        return this.blockEntity != null && this.blockEntity.getOwner() != null &&
-                ContainerLevelAccess.create(blockEntity.getLevel(), blockEntity.getBlockPos()).evaluate((level, pos) ->
-                        level.getBlockState(pos).is(blockEntity.getBlockState().getBlock()) &&
-                                pPlayer.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64, true);
+        return this.blockEntity != null && this.blockEntity.getOwner() != null && ContainerLevelAccess.create(blockEntity.getLevel(), blockEntity.getBlockPos()).evaluate((level, pos) -> level.getBlockState(pos).is(blockEntity.getBlockState().getBlock()) && pPlayer.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64, true);
     }
-
-
 }

@@ -2,9 +2,10 @@ package net.tjkraft.claimanchor;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -37,17 +38,20 @@ public class ClaimAnchor {
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
-
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, CAServerConfig.SERVER_CONFIG);
 
+        modEventBus.addListener(this::addCreative);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(ClaimAnchorNetwork::register);
     }
 
-    @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
+    private void addCreative(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
+            event.accept(CAItems.CLAIM_MONOCLE.get());
+            event.accept(CABlocks.CLAIM_ANCHOR.get());
+        }
     }
 
     @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
