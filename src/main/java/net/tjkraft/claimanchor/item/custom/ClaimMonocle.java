@@ -90,7 +90,7 @@ public class ClaimMonocle extends Item {
         long minutes = totalSeconds / 60;
         long seconds = totalSeconds % 60;
 
-        return String.format("📅 Claim Time: %d years, %d months, %d days, %d hours, %d minutes, %d seconds", years, months, days, hours, minutes, seconds);
+        return String.format("Claim Time: %02dy : %02dmo : %02dd : %02dh : %02dm : %02ds", years, months, days, hours, minutes, seconds);
     }
 
 }

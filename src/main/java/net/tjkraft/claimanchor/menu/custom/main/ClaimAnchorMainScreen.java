@@ -87,26 +87,8 @@ public class ClaimAnchorMainScreen extends AbstractContainerScreen<ClaimAnchorMa
         renderBackground(graphics);
         super.render(graphics, mouseX, mouseY, partialTick);
         //Owner Name
-        graphics.drawString(font, Component.translatable("gui.claim_anchor.owner", menu.ownerName), leftPos + 10, topPos + 18, 0xFFFFFF);
-        //Claim Time
-        String timeStr = formatTicks(menu.data.get(0));
-        graphics.drawString(font, timeStr, leftPos + 10, topPos + 32, 0xFFFFFF);
+        graphics.drawString(font, Component.translatable("gui.claim_anchor.owner", menu.ownerName), leftPos + 8, topPos + 18, 0xFFFFFF);
         renderTooltip(graphics, mouseX, mouseY);
-    }
-
-    String formatTicks(int ticks) {
-        int seconds = ticks / 20;
-        int minutes = seconds / 60;
-        int hours = minutes / 60;
-        int days = hours / 24;
-        int years = days / 365;
-
-        days %= 365;
-        hours %= 24;
-        minutes %= 60;
-        seconds %= 60;
-
-        return String.format("%02dy : %02dd : %02dh : %02dm : %02ds", years, days, hours, minutes, seconds);
     }
 
 }

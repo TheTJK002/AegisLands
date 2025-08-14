@@ -7,6 +7,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -55,7 +56,7 @@ public class ForgeEvents {
             case WEST -> mutableBlockPos.setZ(mutableBlockPos.getX() - 1);
             case EAST -> mutableBlockPos.setZ(mutableBlockPos.getX() + 1);
         }
-        BlockState state = level.getBlockState(mutableBlockPos);
+        BlockState state = level.getBlockState(event.getPos());
 
         ResourceLocation blockId = ForgeRegistries.BLOCKS.getKey(state.getBlock());
 
@@ -84,7 +85,7 @@ public class ForgeEvents {
     public static void onEntityDamage(LivingAttackEvent event) {
         Entity target = event.getEntity();
         if (target.level().isClientSide) return;
-        if (isEntityAllowed(target)) return;
+        //if (isEntityAllowed(target)) return;
         if (target instanceof Player) return;
 
         if (event.getSource().getEntity() instanceof Player player) {
@@ -148,8 +149,10 @@ public class ForgeEvents {
                     BlockPos pos = new BlockPos(x, y, z);
                     BlockEntity be = level.getBlockEntity(pos);
                     if (be instanceof ClaimAnchorBlockEntity anchor) {
-                        if (!anchor.hasAccess(player.getUUID())) {
-                            return true;
+                        if(anchor.getClaimTime() > 0) {
+                            if (!anchor.hasAccess(player.getUUID())) {
+                                return true;
+                            }
                         }
                     }
                 }

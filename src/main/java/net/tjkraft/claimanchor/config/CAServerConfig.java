@@ -55,7 +55,7 @@ public class CAServerConfig {
         CLAIM_ALLOWED_ENTITIES = builder
                 .comment("Entities that can be interacted with in the claim")
                 .defineListAllowEmpty("claim_anchor_allowed_entities",
-                        List.of("minecraft:boats"),
+                        List.of("minecraft:boats", "minecraft:minecart"),
                         o -> o instanceof String);
         builder.pop();
 
