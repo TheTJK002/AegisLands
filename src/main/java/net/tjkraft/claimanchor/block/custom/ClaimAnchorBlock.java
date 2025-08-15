@@ -127,7 +127,7 @@ public class ClaimAnchorBlock extends BaseEntityBlock {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof ClaimAnchorBlockEntity anchor) {
                 UUID owner = anchor.getOwner();
-                if (owner != null && !owner.equals(player.getUUID())) {
+                if (owner != null && !owner.equals(player.getUUID()) && anchor.getClaimTime() > 0) {
                     player.displayClientMessage(Component.translatable("msg.claim_anchor.owner_break"), true);
                     return false;
                 }

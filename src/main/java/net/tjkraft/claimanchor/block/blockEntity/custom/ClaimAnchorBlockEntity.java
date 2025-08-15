@@ -26,23 +26,23 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.tjkraft.claimanchor.block.blockEntity.CABlockEntity;
 import net.tjkraft.claimanchor.config.CAServerConfig;
 import net.tjkraft.claimanchor.menu.custom.main.ClaimAnchorMainMenu;
+import net.tjkraft.claimanchor.network.ClaimAnchorNetwork;
+import net.tjkraft.claimanchor.network.syncPlayers.SyncTrustedPacket;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider {
     private UUID owner;
     public final ContainerData data;
     public int claimTime = 0;
-
+    private final Map<UUID, String> trustedNames = new HashMap<>();
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
         @Override
@@ -174,6 +174,14 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
         return uuid.equals(owner) || trustedPlayers.contains(uuid);
     }
 
+    public Set<UUID> getTrusted() {
+        return trustedPlayers;
+    }
+
+    public Map<UUID, String> getTrustedNames() {
+        return trustedNames;
+    }
+
     private void synchronizeClaimTimers(int newTimer) {
         if (level == null || level.isClientSide) return;
         if (owner == null) return;
@@ -253,8 +261,27 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
 
     @Override
     public @Nullable AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
+        if (!this.level.isClientSide && pPlayer instanceof ServerPlayer sp) {
+            Map<UUID,String> trustedMap = buildTrustedMap(this, sp.getServer());
+            ClaimAnchorNetwork.INSTANCE.send(
+                    PacketDistributor.PLAYER.with(() -> sp),
+                    new SyncTrustedPacket(this.getBlockPos(), trustedMap)
+            );
+        }
         return new ClaimAnchorMainMenu(pContainerId, pPlayerInventory, this, this.getOwnerName());
     }
+
+    public static Map<UUID, String> buildTrustedMap(ClaimAnchorBlockEntity anchor, MinecraftServer server) {
+        Map<UUID,String> map = new LinkedHashMap<>();
+        for (UUID id : anchor.getTrusted()) {
+            String name = server.getProfileCache().get(id)
+                    .map(GameProfile::getName)
+                    .orElse(id.toString().substring(0,8));
+            map.put(id, name);
+        }
+        return map;
+    }
+
 
     @Nullable
     @Override

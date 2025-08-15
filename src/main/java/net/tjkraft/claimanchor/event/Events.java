@@ -8,7 +8,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import net.tjkraft.claimanchor.ClaimAnchor;
 import net.tjkraft.claimanchor.network.ClaimAnchorNetwork;
-import net.tjkraft.claimanchor.network.syncOnlinePlayers.SyncOnlinePlayersPacket;
+import net.tjkraft.claimanchor.network.syncPlayers.SyncOnlinePlayersPacket;
 
 import java.util.List;
 import java.util.UUID;

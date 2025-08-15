@@ -7,7 +7,6 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -149,7 +148,7 @@ public class ForgeEvents {
                     BlockPos pos = new BlockPos(x, y, z);
                     BlockEntity be = level.getBlockEntity(pos);
                     if (be instanceof ClaimAnchorBlockEntity anchor) {
-                        if(anchor.getClaimTime() > 0) {
+                        if (anchor.getClaimTime() > 0) {
                             if (!anchor.hasAccess(player.getUUID())) {
                                 return true;
                             }

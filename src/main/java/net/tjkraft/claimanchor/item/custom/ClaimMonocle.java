@@ -33,11 +33,16 @@ public class ClaimMonocle extends Item {
                 for (int z = 0; z < 16; z++) {
                     BlockPos check = new BlockPos((chunkX << 4) + x, y, (chunkZ << 4) + z);
                     if (level.getBlockEntity(check) instanceof ClaimAnchorBlockEntity anchor) {
-                        String timeStr = formatTicksAsTime(anchor.getClaimTime());
-                        player.displayClientMessage(Component.literal(timeStr), true);
 
-                        if (level instanceof ServerLevel serverLevel) {
-                            showClaimBox(serverLevel, anchor.getBlockPos());
+                        if (anchor.getClaimTime() == 0) {
+                            player.displayClientMessage(Component.translatable("msg.claim_anchor.no_time"), true);
+                        } else {
+                            String timeStr = formatTicksAsTime(anchor.getClaimTime());
+                            player.displayClientMessage(Component.literal(timeStr), true);
+
+                            if (level instanceof ServerLevel serverLevel) {
+                                showClaimBox(serverLevel, anchor.getBlockPos());
+                            }
                         }
                     }
                 }
@@ -70,7 +75,6 @@ public class ClaimMonocle extends Item {
             }
         }
     }
-
 
     public static String formatTicksAsTime(int ticks) {
         long totalSeconds = ticks / 20L;

@@ -1,13 +1,13 @@
-package net.tjkraft.claimanchor.network.syncOnlinePlayers;
+package net.tjkraft.claimanchor.network.syncPlayers;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
-import net.tjkraft.claimanchor.menu.custom.trusted.ClaimAnchorTrustedScreen;
-import java.util.function.Supplier;
+import net.tjkraft.claimanchor.menu.custom.trusted.ClaimAnchorTrustedAddScreen;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public class SyncOnlinePlayersPacket {
     private final List<UUID> online;
@@ -26,7 +26,7 @@ public class SyncOnlinePlayersPacket {
 
     public void handle(Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
-            if (Minecraft.getInstance().screen instanceof ClaimAnchorTrustedScreen screen) {
+            if (Minecraft.getInstance().screen instanceof ClaimAnchorTrustedAddScreen screen) {
                 screen.updateOnlinePlayers(online);
             }
         });

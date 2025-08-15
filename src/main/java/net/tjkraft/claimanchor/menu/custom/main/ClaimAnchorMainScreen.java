@@ -16,7 +16,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.tjkraft.claimanchor.ClaimAnchor;
 import net.tjkraft.claimanchor.block.blockEntity.custom.ClaimAnchorBlockEntity;
 import net.tjkraft.claimanchor.config.CAServerConfig;
-import net.tjkraft.claimanchor.menu.custom.trusted.ClaimAnchorTrustedScreen;
+import net.tjkraft.claimanchor.menu.custom.trusted.ClaimAnchorTrustedAddScreen;
+import net.tjkraft.claimanchor.menu.custom.trusted.ClaimAnchorTrustedRemoveScreen;
 
 import java.util.UUID;
 
@@ -47,8 +48,8 @@ public class ClaimAnchorMainScreen extends AbstractContainerScreen<ClaimAnchorMa
 
         if (info != null) {
             ResourceLocation skin = info.getSkinLocation();
-
-            addRenderableWidget(new PlayerHeadButton(leftPos + 150, topPos + 5, skin, Component.translatable("gui.claim_anchor.add_remove_player"), btn -> Minecraft.getInstance().setScreen(new ClaimAnchorTrustedScreen(anchor))));
+            addRenderableWidget(new PlayerHeadButton(leftPos + 150, topPos + 8, skin, Component.translatable("gui.claim_anchor.add_player"), btn -> Minecraft.getInstance().setScreen(new ClaimAnchorTrustedAddScreen(anchor))));
+            addRenderableWidget(new PlayerHeadButton(leftPos + 150, topPos + 28, skin, Component.translatable("gui.claim_anchor.remove_player"), btn -> Minecraft.getInstance().setScreen(new ClaimAnchorTrustedRemoveScreen(anchor))));
         }
     }
 
