@@ -1,11 +1,15 @@
 {
   "block.claim_anchor.claim_anchor": "Claim Anchor",
   "item.claim_anchor.claim_monocle": "Claim Monocle",
+  "item.claim_anchor.chunk_loader_upgrade": "Chunk Loader Upgrade",
 
   "msg.claim_anchor.reach_limited": "You have reached your Claim Anchor limit: %s",
   "msg.claim_anchor.close_claim": "You are too close to another player's claim: %s chunks",
   "msg.claim_anchor.owner_break": "Only the owner can break this",
   "msg.claim_anchor.no_time": "Claim Inactive",
+
+  "tooltip.claim_anchor.chunk_loader": "Load the chunk when the claim is active",
+
   "gui.claim_anchor.add_player": "Add Player",
   "gui.claim_anchor.remove_player": "Remove Player",
   "gui.claim_anchor.owner": "Owner: %s"

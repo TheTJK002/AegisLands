@@ -10,9 +10,11 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.SlotItemHandler;
 import net.tjkraft.claimanchor.block.blockEntity.custom.ClaimAnchorBlockEntity;
 import net.tjkraft.claimanchor.menu.CAMenuTypes;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ClaimAnchorMainMenu extends AbstractContainerMenu {
@@ -33,8 +35,17 @@ public class ClaimAnchorMainMenu extends AbstractContainerMenu {
         this.ownerName = ownerName;
         this.addDataSlots(this.data);
 
+        IItemHandler handler = blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER, null)
+                .orElseThrow(() -> new IllegalStateException("No item handler"));
+
         this.blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(iItemHandler -> {
             this.addSlot(new SlotItemHandler(iItemHandler, 0, 80, 56));
+            this.addSlot(new SlotItemHandler(iItemHandler, 1, 179, 16){
+                @Override
+                public boolean mayPlace(@NotNull ItemStack stack) {
+                    return handler.isItemValid(1, stack);
+                }
+            });
         });
 
         for (int row = 0; row < 3; row++) {

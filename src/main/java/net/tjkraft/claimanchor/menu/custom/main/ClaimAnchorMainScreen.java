@@ -32,7 +32,7 @@ public class ClaimAnchorMainScreen extends AbstractContainerScreen<ClaimAnchorMa
         super(pMenu, pPlayerInventory, pTitle);
         this.anchor = pMenu.blockEntity;
         this.inventory = pPlayerInventory;
-        this.imageWidth = 176;
+        this.imageWidth = 201;
         this.imageHeight = 182;
         this.inventoryLabelX = 8;
         this.inventoryLabelY = 88;

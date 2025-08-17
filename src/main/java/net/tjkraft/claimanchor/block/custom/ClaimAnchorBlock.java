@@ -143,6 +143,7 @@ public class ClaimAnchorBlock extends BaseEntityBlock {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof ClaimAnchorBlockEntity claimAnchor) {
                 AnchorTracker.decrement(claimAnchor.getOwner());
+                claimAnchor.drops();
             }
             super.onRemove(state, level, pos, newState, isMoving);
         }

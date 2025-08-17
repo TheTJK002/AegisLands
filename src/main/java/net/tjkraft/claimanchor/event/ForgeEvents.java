@@ -16,6 +16,7 @@ import net.minecraftforge.event.entity.EntityMountEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -52,8 +53,8 @@ public class ForgeEvents {
             case UP -> mutableBlockPos.setY(mutableBlockPos.getY() + 1);
             case NORTH -> mutableBlockPos.setZ(mutableBlockPos.getZ() - 1);
             case SOUTH -> mutableBlockPos.setZ(mutableBlockPos.getZ() + 1);
-            case WEST -> mutableBlockPos.setZ(mutableBlockPos.getX() - 1);
-            case EAST -> mutableBlockPos.setZ(mutableBlockPos.getX() + 1);
+            case WEST -> mutableBlockPos.setX(mutableBlockPos.getX() - 1);
+            case EAST -> mutableBlockPos.setX(mutableBlockPos.getX() + 1);
         }
         BlockState state = level.getBlockState(event.getPos());
 
@@ -84,7 +85,6 @@ public class ForgeEvents {
     public static void onEntityDamage(LivingAttackEvent event) {
         Entity target = event.getEntity();
         if (target.level().isClientSide) return;
-        //if (isEntityAllowed(target)) return;
         if (target instanceof Player) return;
 
         if (event.getSource().getEntity() instanceof Player player) {
@@ -111,7 +111,6 @@ public class ForgeEvents {
         }
     }
 
-
     private static boolean isEntityAllowed(Entity entity) {
         EntityType<?> type = entity.getType();
         ResourceLocation id = ForgeRegistries.ENTITY_TYPES.getKey(type);
@@ -128,6 +127,16 @@ public class ForgeEvents {
         }
 
         return false;
+    }
+
+    @SubscribeEvent
+    public static void onExplosionStart(ExplosionEvent.Start event) {
+        Level level = event.getLevel();
+        BlockPos pos = BlockPos.containing(event.getExplosion().getPosition());
+
+            if (shouldBlockForAll(pos, level)) {
+                event.setCanceled(true);
+        }
     }
 
     private static boolean shouldBlock(Player player, BlockPos targetPos, Level level) {
@@ -152,6 +161,34 @@ public class ForgeEvents {
                             if (!anchor.hasAccess(player.getUUID())) {
                                 return true;
                             }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean shouldBlockForAll(BlockPos targetPos, Level level) {
+        LevelChunk levelChunk = level.getChunkAt(targetPos);
+        ChunkPos chunkPos = levelChunk.getPos();
+        int minX = chunkPos.getMinBlockX();
+        int maxX = chunkPos.getMaxBlockX();
+
+        int minZ = chunkPos.getMinBlockZ();
+        int maxZ = chunkPos.getMaxBlockZ();
+
+        int minY = targetPos.getY() - CAServerConfig.MIN_ANCHOR_Y.get();
+        int maxY = targetPos.getY() + CAServerConfig.MAX_ANCHOR_Y.get();
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                for (int y = minY; y <= maxY; y++) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    BlockEntity be = level.getBlockEntity(pos);
+                    if (be instanceof ClaimAnchorBlockEntity anchor) {
+                        if (anchor.getClaimTime() > 0) {
+                            return true;
                         }
                     }
                 }

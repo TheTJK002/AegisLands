@@ -1,17 +1,15 @@
 package net.tjkraft.claimanchor.menu.custom.trusted;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.tjkraft.claimanchor.ClaimAnchor;
 import net.tjkraft.claimanchor.block.blockEntity.custom.ClaimAnchorBlockEntity;
-import net.tjkraft.claimanchor.network.claimAnchorTrusted.RemoveTrustedPacket;
 import net.tjkraft.claimanchor.network.ClaimAnchorNetwork;
+import net.tjkraft.claimanchor.network.claimAnchorTrusted.RemoveTrustedPacket;
 
 import java.util.*;
 

@@ -10,7 +10,9 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -24,12 +26,15 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.tjkraft.claimanchor.ClaimAnchor;
 import net.tjkraft.claimanchor.block.blockEntity.CABlockEntity;
 import net.tjkraft.claimanchor.config.CAServerConfig;
+import net.tjkraft.claimanchor.item.CAItems;
 import net.tjkraft.claimanchor.menu.custom.main.ClaimAnchorMainMenu;
 import net.tjkraft.claimanchor.network.ClaimAnchorNetwork;
 import net.tjkraft.claimanchor.network.syncPlayers.SyncTrustedPacket;
@@ -44,10 +49,27 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
     public int claimTime = 0;
     private final Map<UUID, String> trustedNames = new HashMap<>();
 
-    private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
+    private final static int SLOT_PAYMENT = 0;
+    private final static int SLOT_UPGRADE = 1;
+    private boolean chunkForced = false;
+
+    private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
+        }
+
+        @Override
+        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            if (stack.isEmpty()) return false;
+            String itemId = ForgeRegistries.ITEMS.getKey(stack.getItem()).toString();
+
+            if (slot == SLOT_PAYMENT) {
+                return CAServerConfig.PAYMENT_CLAIM.get().contains(itemId);
+            } else if (slot == SLOT_UPGRADE) {
+                return stack.is(CAItems.CHUNK_LOADER_UPGRADE.get());
+            }
+            return false;
         }
     };
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
@@ -91,6 +113,7 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
             }
 
             if (this.claimIsActive()) {
+                checkChunkLoading();
                 this.claimTime--;
                 if (owner == this.getOwner()) {
                     this.takeClaimTime(this.getClaimTime());
@@ -108,6 +131,11 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
                 serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER, x, y, z, 1, 0, 0, 0, 0);
             }
         }
+    }
+
+    public boolean hasChunkUpgrade() {
+        ItemStack upg = this.itemHandler.getStackInSlot(SLOT_UPGRADE);
+        return !upg.isEmpty();
     }
 
     public UUID getOwner() {
@@ -219,6 +247,13 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
     public void onLoad() {
         super.onLoad();
         lazyItemHandler = LazyOptional.of(() -> itemHandler);
+        if (!level.isClientSide) checkChunkLoading();
+    }
+
+    @Override
+    public void setRemoved() {
+        super.setRemoved();
+        if (!level.isClientSide && chunkForced) releaseChunk();
     }
 
     @Override
@@ -262,21 +297,16 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
     @Override
     public @Nullable AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
         if (!this.level.isClientSide && pPlayer instanceof ServerPlayer sp) {
-            Map<UUID,String> trustedMap = buildTrustedMap(this, sp.getServer());
-            ClaimAnchorNetwork.INSTANCE.send(
-                    PacketDistributor.PLAYER.with(() -> sp),
-                    new SyncTrustedPacket(this.getBlockPos(), trustedMap)
-            );
+            Map<UUID, String> trustedMap = buildTrustedMap(this, sp.getServer());
+            ClaimAnchorNetwork.INSTANCE.send(PacketDistributor.PLAYER.with(() -> sp), new SyncTrustedPacket(this.getBlockPos(), trustedMap));
         }
         return new ClaimAnchorMainMenu(pContainerId, pPlayerInventory, this, this.getOwnerName());
     }
 
     public static Map<UUID, String> buildTrustedMap(ClaimAnchorBlockEntity anchor, MinecraftServer server) {
-        Map<UUID,String> map = new LinkedHashMap<>();
+        Map<UUID, String> map = new LinkedHashMap<>();
         for (UUID id : anchor.getTrusted()) {
-            String name = server.getProfileCache().get(id)
-                    .map(GameProfile::getName)
-                    .orElse(id.toString().substring(0,8));
+            String name = server.getProfileCache().get(id).map(GameProfile::getName).orElse(id.toString().substring(0, 8));
             map.put(id, name);
         }
         return map;
@@ -294,5 +324,41 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements MenuProvider 
         CompoundTag nbt = super.getUpdateTag();
         saveAdditional(nbt);
         return nbt;
+    }
+
+    public void drops() {
+        SimpleContainer inventory = new SimpleContainer(itemHandler.getSlots());
+        for (int i = 0; i < itemHandler.getSlots(); i++) {
+            inventory.setItem(i, itemHandler.getStackInSlot(i));
+        }
+        Containers.dropContents(this.level, this.worldPosition, inventory);
+    }
+
+    // -------- Chunk loading logic --------
+
+    private static final net.minecraft.server.level.TicketType<BlockPos> CLAIM_ANCHOR_TICKET =
+            net.minecraft.server.level.TicketType.create("claim_anchor", (a, b) -> 0);
+
+    private void checkChunkLoading() {
+        if (!(level instanceof ServerLevel server)) return;
+        boolean shouldForce = hasChunkUpgrade();
+        ChunkPos pos = new ChunkPos(this.worldPosition);
+
+        if (shouldForce && !chunkForced) {
+            ForgeChunkManager.forceChunk(server, ClaimAnchor.MOD_ID,
+                    this.worldPosition, pos.x, pos.z, true, true);
+            chunkForced = true;
+        } else if (!shouldForce && chunkForced) {
+            ForgeChunkManager.forceChunk(server, ClaimAnchor.MOD_ID,
+                    this.worldPosition, pos.x, pos.z, false, true);
+            chunkForced = false;
+        }
+    }
+
+    private void releaseChunk() {
+        if (!(level instanceof ServerLevel server)) return;
+        ChunkPos chunk = new ChunkPos(this.worldPosition);
+        server.getChunkSource().removeRegionTicket(CLAIM_ANCHOR_TICKET, chunk, 1, this.worldPosition);
+        chunkForced = false;
     }
 }
