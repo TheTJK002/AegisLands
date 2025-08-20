@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "aegis_lands:block/claim_anchor"
+    }
+  }
+}

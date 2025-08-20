@@ -1,0 +1,17 @@
+{
+  "block.aegis_lands.claim_anchor": "Claim Anchor",
+  "item.aegis_lands.claim_monocle": "Claim Monocle",
+  "item.aegis_lands.chunk_loader_upgrade": "Chunk Loader Upgrade",
+
+  "msg.aegis_lands.reach_limited": "You have reached your Claim Anchor limit: %s",
+  "msg.aegis_lands.close_claim": "You are too close to another player's claim: %s chunks",
+  "msg.aegis_lands.owner_break": "Only the owner can break this",
+  "msg.aegis_lands.no_time": "Claim Inactive",
+
+  "tooltip.aegis_lands.chunk_loader": "Load the chunk when the claim is active",
+
+  "gui.aegis_lands.add_player": "Add Player",
+  "gui.aegis_lands.remove_player": "Remove Player",
+  "gui.aegis_lands.owner": "Owner: %s",
+  "gui.aegis_lands.go_back": "Go Back"
+}

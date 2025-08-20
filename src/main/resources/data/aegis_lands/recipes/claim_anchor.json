@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": {
+      "tag": "forge:obsidian"
+    },
+    "B": {
+      "tag": "forge:gems/lapis"
+    },
+    "C": {
+      "tag": "minecraft:signs"
+    }
+  },
+  "pattern": [
+    "ABA",
+    "BCB",
+    "ABA"
+  ],
+  "result": {
+    "item": "aegis_lands:claim_anchor"
+  }
+}
