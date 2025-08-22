@@ -2,6 +2,7 @@ package net.tjkraft.aegislands.event;
 
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -30,4 +31,14 @@ public class ClientEvents {
             s.updateOnlinePlayers(Minecraft.getInstance().getConnection().getOnlinePlayers().stream().map(p -> p.getProfile().getId()).toList());
         }
     }
+
+    @SubscribeEvent
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
+            if (Minecraft.getInstance().screen instanceof AegisLandsTrustedAddScreen trustedScreen) {
+                AegisLandsTrustedAddScreen.tickUpdate(trustedScreen);
+            }
+        }
+    }
+
 }

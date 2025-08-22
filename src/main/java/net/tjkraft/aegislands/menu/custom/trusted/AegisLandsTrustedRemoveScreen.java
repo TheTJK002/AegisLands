@@ -31,7 +31,7 @@ public class AegisLandsTrustedRemoveScreen extends Screen {
     private final Map<UUID, String> uuidToName = new HashMap<>();
 
     public AegisLandsTrustedRemoveScreen(ClaimAnchorBE anchor) {
-        super(Component.literal("Trusted Players"));
+        super(Component.literal("Remove Players"));
         this.anchor = anchor;
         rebuildTrustedList();
     }
@@ -104,7 +104,7 @@ public class AegisLandsTrustedRemoveScreen extends Screen {
         for (int i = scrollOffset; i < Math.min(scrollOffset + VISIBLE, trustedPlayers.size()); i++) {
             UUID uuid = trustedPlayers.get(i);
             Button remove = Button.builder(Component.literal("-"), b -> {
-                net.tjkraft.aegislands.network.AegisLandsNetwork.INSTANCE.sendToServer(new RemoveTrustedPacket(anchor.getBlockPos(), uuid));
+                AegisLandsNetwork.INSTANCE.sendToServer(new RemoveTrustedPacket(anchor.getBlockPos(), uuid));
 
                 trustedPlayers.remove(uuid);
                 refreshVisiblePlayers();

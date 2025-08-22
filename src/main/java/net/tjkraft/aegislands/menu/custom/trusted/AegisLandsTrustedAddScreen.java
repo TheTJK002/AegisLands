@@ -16,7 +16,9 @@ import net.tjkraft.aegislands.network.AegisLandsNetwork;
 import net.tjkraft.aegislands.network.AegisLandsNetworkWrapper;
 import net.tjkraft.aegislands.network.openScreen.AegisLandsOpenMainScreen;
 
+import java.io.PrintStream;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class AegisLandsTrustedAddScreen extends Screen {
     private final ClaimAnchorBE anchor;
@@ -54,6 +56,7 @@ public class AegisLandsTrustedAddScreen extends Screen {
         if (Minecraft.getInstance().getConnection() == null) return;
         for (PlayerInfo info : Minecraft.getInstance().getConnection().getOnlinePlayers()) {
             uuidToName.put(info.getProfile().getId(), info.getProfile().getName());
+            System.out.printf(uuidToName.put(info.getProfile().getId(), info.getProfile().getName()));
         }
     }
 
@@ -108,12 +111,6 @@ public class AegisLandsTrustedAddScreen extends Screen {
         }
     }
 
-    @Override
-    public void tick() {
-        super.tick();
-        updateOnlinePlayersFromConnection();
-    }
-
     public void updateOnlinePlayers(List<UUID> newOnline) {
         UUID ownerUUID = this.anchor.getOwner();
         this.onlinePlayers.clear();
@@ -165,4 +162,24 @@ public class AegisLandsTrustedAddScreen extends Screen {
             yOffset += ENTRY_HEIGHT;
         }
     }
+
+    public static void tickUpdate(AegisLandsTrustedAddScreen screen) {
+        if (Minecraft.getInstance().getConnection() == null) return;
+
+        UUID ownerUUID = screen.getAnchor().getOwner();
+        Set<UUID> trusted = new HashSet<>(screen.getAnchor().getTrusted());
+        List<UUID> current = new ArrayList<>();
+
+        for (PlayerInfo info : Minecraft.getInstance().getConnection().getOnlinePlayers()) {
+            UUID uuid = info.getProfile().getId();
+            if ((ownerUUID == null || !uuid.equals(ownerUUID)) && !trusted.contains(uuid)) {
+                current.add(uuid);
+            }
+        }
+
+        if (!new HashSet<>(current).equals(new HashSet<>(screen.onlinePlayers))) {
+            screen.updateOnlinePlayers(current);
+        }
+    }
+
 }

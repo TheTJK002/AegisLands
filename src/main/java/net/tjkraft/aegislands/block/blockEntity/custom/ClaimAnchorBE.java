@@ -72,6 +72,7 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
             return false;
         }
     };
+
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
 
     public ClaimAnchorBE(BlockPos pPos, BlockState pBlockState) {
@@ -198,16 +199,16 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
         setChanged();
     }
 
-    public boolean hasAccess(UUID uuid) {
-        return uuid.equals(owner) || trustedPlayers.contains(uuid);
-    }
-
     public Set<UUID> getTrusted() {
         return trustedPlayers;
     }
 
     public Map<UUID, String> getTrustedNames() {
         return trustedNames;
+    }
+
+    public boolean hasAccess(UUID uuid) {
+        return uuid.equals(owner) || trustedPlayers.contains(uuid);
     }
 
     private void synchronizeClaimTimers(int newTimer) {
@@ -312,6 +313,15 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
         return map;
     }
 
+    public void drops() {
+        SimpleContainer inventory = new SimpleContainer(itemHandler.getSlots());
+        for (int i = 0; i < itemHandler.getSlots(); i++) {
+            inventory.setItem(i, itemHandler.getStackInSlot(i));
+        }
+        Containers.dropContents(this.level, this.worldPosition, inventory);
+    }
+
+    // -------- Render logic --------
 
     @Nullable
     @Override
@@ -324,14 +334,6 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
         CompoundTag nbt = super.getUpdateTag();
         saveAdditional(nbt);
         return nbt;
-    }
-
-    public void drops() {
-        SimpleContainer inventory = new SimpleContainer(itemHandler.getSlots());
-        for (int i = 0; i < itemHandler.getSlots(); i++) {
-            inventory.setItem(i, itemHandler.getStackInSlot(i));
-        }
-        Containers.dropContents(this.level, this.worldPosition, inventory);
     }
 
     // -------- Chunk loading logic --------

@@ -30,7 +30,7 @@ public class ALServerConfig {
 
         LIMIT_CLAIM_ANCHOR_PER_PLAYER = builder
                 .comment("Limit of Claim Anchor that the player can place")
-                .defineInRange("limit_claim_anchor_per_player", 3, 1, Integer.MAX_VALUE);
+                .defineInRange("limit_claim_anchor_per_player", 4, 1, Integer.MAX_VALUE);
 
         MIN_CLAIM_CHUNK_DISTANCE = builder
                 .comment("Distance between claims between different owners (in chunks)")
@@ -41,9 +41,9 @@ public class ALServerConfig {
                 .define("payment_claim", "minecraft:clock");
 
         CLAIM_TIME = builder
-                .comment("Choose the time of payment for the item (1 = 20 tick)")
-                .comment("300 = 5 minutes")
-                .defineInRange("claim_time", 300, 1, Integer.MAX_VALUE);
+                .comment("Choose the time of payment for the item (20 tick = 1 seconds)")
+                .comment("600 = 10 minutes")
+                .defineInRange("claim_time", 600, 1, Integer.MAX_VALUE);
 
 
         CLAIM_ALLOWED_BLOCKS = builder
@@ -55,7 +55,7 @@ public class ALServerConfig {
         CLAIM_ALLOWED_ENTITIES = builder
                 .comment("Entities that can be interacted with in the claim")
                 .defineListAllowEmpty("claim_anchor_allowed_entities",
-                        List.of("minecraft:boats", "minecraft:minecart"),
+                        List.of("minecraft:boat", "minecraft:minecart"),
                         o -> o instanceof String);
         builder.pop();
 

@@ -7,6 +7,6 @@ import java.util.UUID;
 
 public class AegisLandsNetworkWrapper {
     public static void sendAddTrusted(BlockPos pos, UUID uuid) {
-        net.tjkraft.aegislands.network.AegisLandsNetwork.INSTANCE.sendToServer(new AddTrustedPacket(pos, uuid));
+        AegisLandsNetwork.INSTANCE.sendToServer(new AddTrustedPacket(pos, uuid));
     }
 }
