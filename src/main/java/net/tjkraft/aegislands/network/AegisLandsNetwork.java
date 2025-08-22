@@ -42,7 +42,7 @@ public class AegisLandsNetwork {
                 .consumerMainThread(RemoveTrustedPacket::handle)
                 .add();
 
-        net.messageBuilder(AegisLandsTime.class, id(), NetworkDirection.PLAY_TO_SERVER)
+        net.messageBuilder(AegisLandsTime.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(AegisLandsTime::decode)
                 .encoder(AegisLandsTime::encode)
                 .consumerMainThread(AegisLandsTime::handle)

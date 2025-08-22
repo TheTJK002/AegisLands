@@ -25,6 +25,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.network.NetworkHooks;
+import net.minecraftforge.network.PacketDistributor;
 import net.tjkraft.aegislands.block.blockEntity.ALBlockEntity;
 import net.tjkraft.aegislands.block.blockEntity.custom.AnchorTracker;
 import net.tjkraft.aegislands.block.blockEntity.custom.ClaimAnchorBE;
@@ -116,7 +117,8 @@ public class ClaimAnchor extends BaseEntityBlock {
             if (be instanceof ClaimAnchorBE claimAnchor) {
                 claimAnchor.setOwner(uuid);
                 AnchorTracker.increment(uuid);
-                AegisLandsNetwork.INSTANCE.sendToServer(new AegisLandsTime(uuid, pos));
+                AegisLandsNetwork.INSTANCE.send(PacketDistributor.ALL.noArg(), new AegisLandsTime(uuid, pos));
+
             }
         }
     }
