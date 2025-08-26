@@ -5,7 +5,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.tjkraft.aegislands.AegisLands;
-import net.tjkraft.aegislands.item.custom.ChunkLoaderUpgrade;
+import net.tjkraft.aegislands.item.custom.upgrade.ChunkLoaderUpgrade;
 import net.tjkraft.aegislands.item.custom.ClaimMonocle;
 
 public class ALItems {

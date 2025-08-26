@@ -8,7 +8,7 @@
   "msg.aegis_lands.owner_break": "Only the owner can break this",
   "msg.aegis_lands.no_time": "Claim Inactive",
 
-  "tooltip.aegis_lands.chunk_loader": "Load the chunk when the claim is active",
+  "tooltip.aegis_lands.chunk_loader_upgrade": "Load the chunk when the claim is active",
 
   "gui.aegis_lands.add_player": "Add Player",
   "gui.aegis_lands.remove_player": "Remove Player",

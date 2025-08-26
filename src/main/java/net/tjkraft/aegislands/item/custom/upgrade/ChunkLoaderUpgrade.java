@@ -1,4 +1,4 @@
-package net.tjkraft.aegislands.item.custom;
+package net.tjkraft.aegislands.item.custom.upgrade;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -17,6 +17,6 @@ public class ChunkLoaderUpgrade extends Item {
 
     @Override
     public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents, TooltipFlag pIsAdvanced) {
-        pTooltipComponents.add(Component.translatable("tooltip.aegis_lands.chunk_loader").withStyle(ChatFormatting.YELLOW));
+        pTooltipComponents.add(Component.translatable("tooltip.aegis_lands.chunk_loader_upgrade").withStyle(ChatFormatting.YELLOW));
     }
 }

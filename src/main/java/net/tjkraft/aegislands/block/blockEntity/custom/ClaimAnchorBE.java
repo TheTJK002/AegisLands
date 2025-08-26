@@ -10,6 +10,7 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
@@ -114,7 +115,6 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
             }
 
             if (this.claimIsActive()) {
-                checkChunkLoading();
                 this.claimTime--;
                 if (owner == this.getOwner()) {
                     this.takeClaimTime(this.getClaimTime());
@@ -122,9 +122,12 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
                 }
                 setChanged();
             }
+
             synchronizeClaimTimers(this.getClaimTime());
 
             if (this.claimIsActive()) {
+                checkChunkLoading();
+
                 ServerLevel serverLevel = (ServerLevel) level;
                 double x = pos.getX() + 0.5 + (level.random.nextDouble() - 0.5);
                 double y = pos.getY() + 0.5 + (level.random.nextDouble() - 0.5);
@@ -134,10 +137,14 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
         }
     }
 
+// -------- Upgrade --------
+
     public boolean hasChunkUpgrade() {
         ItemStack upg = this.itemHandler.getStackInSlot(SLOT_UPGRADE);
-        return !upg.isEmpty();
+        return upg.is(ALItems.CHUNK_LOADER_UPGRADE.get());
     }
+
+// -------- Owner --------
 
     public UUID getOwner() {
         setChanged();
@@ -163,6 +170,7 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
         return profile.map(GameProfile::getName).orElse("Unknown");
     }
 
+// -------- Claim Time --------
 
     public int getClaimTime() {
         setChanged();
@@ -185,30 +193,6 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
             return true;
         }
         return false;
-    }
-
-    private final Set<UUID> trustedPlayers = new HashSet<>();
-
-    public void addTrusted(UUID uuid) {
-        trustedPlayers.add(uuid);
-        setChanged();
-    }
-
-    public void removeTrusted(UUID uuid) {
-        trustedPlayers.remove(uuid);
-        setChanged();
-    }
-
-    public Set<UUID> getTrusted() {
-        return trustedPlayers;
-    }
-
-    public Map<UUID, String> getTrustedNames() {
-        return trustedNames;
-    }
-
-    public boolean hasAccess(UUID uuid) {
-        return uuid.equals(owner) || trustedPlayers.contains(uuid);
     }
 
     private void synchronizeClaimTimers(int newTimer) {
@@ -235,6 +219,34 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
         setChanged();
         synchronizeClaimTimers(ticks);
     }
+
+// -------- Trusted Players --------
+
+    private final Set<UUID> trustedPlayers = new HashSet<>();
+
+    public void addTrusted(UUID uuid) {
+        trustedPlayers.add(uuid);
+        setChanged();
+    }
+
+    public void removeTrusted(UUID uuid) {
+        trustedPlayers.remove(uuid);
+        setChanged();
+    }
+
+    public Set<UUID> getTrusted() {
+        return trustedPlayers;
+    }
+
+    public Map<UUID, String> getTrustedNames() {
+        return trustedNames;
+    }
+
+    public boolean hasAccess(UUID uuid) {
+        return uuid.equals(owner) || trustedPlayers.contains(uuid);
+    }
+
+// -------- Capability --------
 
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
@@ -290,6 +302,8 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
         claimTime = tag.getInt("Claim Time");
     }
 
+// -------- GUI --------
+
     @Override
     public Component getDisplayName() {
         return Component.translatable("block.aegis_lands.claim_anchor");
@@ -313,6 +327,8 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
         return map;
     }
 
+// -------- Drop --------
+
     public void drops() {
         SimpleContainer inventory = new SimpleContainer(itemHandler.getSlots());
         for (int i = 0; i < itemHandler.getSlots(); i++) {
@@ -321,7 +337,7 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
         Containers.dropContents(this.level, this.worldPosition, inventory);
     }
 
-    // -------- Render logic --------
+// -------- Render logic --------
 
     @Nullable
     @Override
@@ -336,10 +352,10 @@ public class ClaimAnchorBE extends BlockEntity implements MenuProvider {
         return nbt;
     }
 
-    // -------- Chunk loading logic --------
+// -------- Chunk loading logic --------
 
-    private static final net.minecraft.server.level.TicketType<BlockPos> CLAIM_ANCHOR_TICKET =
-            net.minecraft.server.level.TicketType.create("claim_anchor", (a, b) -> 0);
+    private static final TicketType<BlockPos> CLAIM_ANCHOR_TICKET =
+            TicketType.create("claim_anchor", (a, b) -> 0);
 
     private void checkChunkLoading() {
         if (!(level instanceof ServerLevel server)) return;

@@ -7,6 +7,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BoatItem;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -68,6 +69,21 @@ public class ForgeEvents {
     }
 
     @SubscribeEvent
+    public static void onBoatPlace(PlayerInteractEvent.RightClickItem event) {
+        Player player = event.getEntity();
+        Level level = event.getLevel();
+
+        if (event.getItemStack().getItem() instanceof BoatItem) {
+
+            BlockPos pos = player.blockPosition();
+            if (shouldBlock(player, pos, level)) {
+                event.setCanceled(true);
+            }
+        }
+    }
+
+
+    @SubscribeEvent
     public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
         Player player = event.getEntity();
         Entity target = event.getTarget();
@@ -75,22 +91,33 @@ public class ForgeEvents {
         ResourceLocation entityId = ForgeRegistries.ENTITY_TYPES.getKey(target.getType());
 
         if (ALServerConfig.CLAIM_ALLOWED_ENTITIES.get().contains(entityId.toString())) return;
-
         if (shouldBlock(player, target.blockPosition(), level)) {
             event.setCanceled(true);
         }
     }
 
+    private static final TagKey<EntityType<?>> NON_ATTACKABLE = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(AegisLands.MOD_ID, "non_attackable"));
+
     @SubscribeEvent
     public static void onEntityDamage(LivingAttackEvent event) {
-        Entity target = event.getEntity();
-        if (target.level().isClientSide) return;
-        if (target instanceof Player) return;
+        if (event.getEntity().level().isClientSide) return;
 
-        if (event.getSource().getEntity() instanceof Player player) {
+        if (!(event.getSource().getEntity() instanceof Player player)) return;
+
+        Entity target = event.getEntity();
+
+        if (target.getType().is(NON_ATTACKABLE)) {
             if (shouldBlock(player, target.blockPosition(), target.level())) {
                 event.setCanceled(true);
             }
+            return;
+        }
+
+        if (target instanceof Player) {
+            if (shouldBlock(player, target.blockPosition(), target.level())) {
+                event.setCanceled(true);
+            }
+            return;
         }
     }
 
@@ -134,8 +161,8 @@ public class ForgeEvents {
         Level level = event.getLevel();
         BlockPos pos = BlockPos.containing(event.getExplosion().getPosition());
 
-            if (shouldBlockForAll(pos, level)) {
-                event.setCanceled(true);
+        if (shouldBlockForAll(pos, level)) {
+            event.setCanceled(true);
         }
     }
 
