@@ -1,4 +1,4 @@
-package net.tjkraft.aegislands.config;
+ package net.tjkraft.aegislands.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 
